@@ -1,4 +1,4 @@
-W&B for Ultralight Version 2.02 by Egill Ibsen (Web) - Multi-aircraft Selection
+W&B for Ultralight Version 2.02 by Egill Ibsen (Web) - Multi-aircraft
 
 This version adds:
 - A/C Type dropdown (Skyranger Nynja 600 preset + 3 other aircraft placeholders)

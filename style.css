@@ -172,3 +172,17 @@ input.warn, select.warn { background: var(--warn); color: #111827; }
   .extra-grid .extra-h:nth-child(3) { display: none; }
   .extra-grid input:nth-child(3n) { display: none; }
 }
+
+
+/* Tailwheel control emphasis */
+.aircraft-type-row { align-items: center; margin-top: 4px; }
+.tw-field { align-self: center; }
+.tw-field .checkbox.tailwheel { font-size: 15px; font-weight: 800; }
+.tw-field .checkbox.tailwheel input { width: 20px; height: 20px; }
+
+/* Tailwheel required field highlight */
+input.danger {
+  background: #ffd1d1;
+  color: #111827;
+  border: 2px solid #b91c1c;
+}

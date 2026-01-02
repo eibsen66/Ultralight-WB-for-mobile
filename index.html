@@ -29,12 +29,17 @@
     <section class="card">
       <div class="card-title">Aircraft</div>
 
-      <div class="row wrap">
+      <div class="row wrap aircraft-type-row">
         <div class="field">
           <label for="acType">A/C Type</label>
           <select id="acType"></select>
           <div class="hint">Select a preset or choose Add Aircraft type to create your own entry.</div>
         </div>
+
+        <div class="field tight tw-field">
+          <label class="checkbox tailwheel"><input id="isTailwheel" type="checkbox"> Tailwheel</label>
+          <div id="tailwheelHint" class="hint" style="margin-top:4px;"></div>
+</div>
       </div>
 
       <div class="row wrap">
@@ -47,25 +52,25 @@
         <div class="field">
           <label for="fuelCap">Fuel Capacity (L)</label>
           <input id="fuelCap" type="number" inputmode="decimal" step="0.1">
-          <div class="hint">Yellow if not 73 L</div>
+          <div class="hint">&nbsp;</div>
         </div>
 
         <div class="field">
           <label for="mtow">MTOW (kg)</label>
           <input id="mtow" type="number" inputmode="decimal" step="0.1">
-          <div class="hint">Yellow if changed</div>
+          <div class="hint">&nbsp;</div>
         </div>
 
         <div class="field">
           <label for="cgAft">CG aft limit (m FoD)</label>
           <input id="cgAft" type="number" inputmode="decimal" step="0.001">
-          <div class="hint">Yellow if changed</div>
+          <div class="hint">&nbsp;</div>
         </div>
 
         <div class="field">
           <label for="cgFwd">CG fwd limit (m FoD)</label>
           <input id="cgFwd" type="number" inputmode="decimal" step="0.001">
-          <div class="hint">Yellow if changed</div>
+          <div class="hint">&nbsp;</div>
         </div>
 
         <div class="field tight">
@@ -79,7 +84,7 @@
         <div class="details-body">
           <div class="grid4">
             <div class="field">
-              <label for="armNose">Arm nose wheel (m FoD)</label>
+              <label for="armNose" id="armNoseLabel">Arm nose wheel (m FoD)</label>
               <input id="armNose" type="number" inputmode="decimal" step="0.001">
             </div>
             <div class="field">
@@ -157,15 +162,15 @@
         <div class="card-title">1) Empty baseline from wheel loads</div>
         <div class="row">
           <div class="field">
-            <label for="noseLoad">Nose wheel wt (kg)</label>
+            <label for="noseLoad" id="noseLoadLabel">Nose wheel wt (kg)</label>
             <input id="noseLoad" type="number" inputmode="decimal" step="0.1">
           </div>
           <div class="field">
-            <label for="leftLoad">Left main wt (kg)</label>
+            <label for="leftLoad">Left main load (kg)</label>
             <input id="leftLoad" type="number" inputmode="decimal" step="0.1">
           </div>
           <div class="field">
-            <label for="rightLoad">Right main wt (kg)</label>
+            <label for="rightLoad">Right main load (kg)</label>
             <input id="rightLoad" type="number" inputmode="decimal" step="0.1">
           </div>
         </div>

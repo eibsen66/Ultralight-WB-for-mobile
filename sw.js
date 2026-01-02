@@ -1,5 +1,5 @@
 /* ASCII-only service worker */
-const CACHE_NAME = "wb-ultralight-v2-02-003";
+const CACHE_NAME = "wb-ultralight-v2-02-007";
 const PRECACHE = [
   "./",
   "./index.html",

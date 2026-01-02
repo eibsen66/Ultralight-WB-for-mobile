@@ -173,6 +173,7 @@ function escapeHtml(s) {
 }
 
 const state = {
+  tailwheelArmEdited: false,
   moreItems: [],
   lastEmptyComputed: null,
   currentPresetName: "Skyranger Nynja 600"
@@ -180,6 +181,8 @@ const state = {
 
 function defaultState() {
   return {
+    isTailwheel: false,
+    tailwheelArmEdited: false,
     acType: "Skyranger Nynja 600",
     reg: "",
     // Top fields
@@ -246,6 +249,9 @@ function saveState() {
 function collectState() {
   return {
     acType: el("acType").value,
+    isTailwheel: el("isTailwheel").checked,
+    tailwheelArmEdited: !!state.tailwheelArmEdited,
+    isTailwheel: el("isTailwheel").checked,
     reg: clampText(el("reg").value, 20),
     fuelCap: el("fuelCap").value,
     mtow: el("mtow").value,
@@ -290,9 +296,9 @@ function collectState() {
 
 function setWarn(node, isWarn) {
   if (!node) return;
-  if (isWarn) node.classList.add("warn");
-  else node.classList.remove("warn");
+  try { node.classList.remove("warn"); } catch (e) {}
 }
+
 
 function populateAircraftDropdown() {
   const sel = el("acType");
@@ -1302,7 +1308,52 @@ function buildHelpText() {
   return lines.join("\n");
 }
 
+
+function updateTailwheelUI(userToggled=false) {
+  const cb = el("isTailwheel");
+  if (!cb) return;
+  const isTw = !!cb.checked;
+
+  // Wheel load label
+  const lb = el("noseLoadLabel") || document.querySelector('label[for="noseLoad"]');
+  if (lb) lb.textContent = isTw ? "Tail wheel wt (kg)" : "Nose wheel wt (kg)";
+
+  // Arm label inside Aircraft data
+  const armLb = el("armNoseLabel") || document.querySelector('label[for="armNose"]');
+  if (armLb) armLb.textContent = isTw ? "Arm tail wheel (m FoD)" : "Arm nose wheel (m FoD)";
+
+  // Warning text
+  const hint = el("tailwheelHint");
+  if (hint) {
+    hint.textContent = isTw ? "WARNING: Tailwheel mode only changes labels. Set wheel arm in Aircraft data." : "";
+  }
+
+  // Auto-open Aircraft data when tailwheel selected
+  const det = el("acData");
+  if (det && isTw) {
+    det.setAttribute("open", "");
+    det.open = true;
+    try { det.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+    // iOS sometimes needs a second tick
+    setTimeout(() => {
+      try { det.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+    }, 80);
+  }
+
+  // Mark wheel arm field as needing review until edited
+  if (userToggled && isTw) {
+    state.tailwheelArmEdited = false;
+  }
+
+  const armIn = el("armNose");
+  if (armIn) {
+    if (isTw && !state.tailwheelArmEdited) armIn.classList.add("danger");
+    else armIn.classList.remove("danger");
+  }
+}
+
 function updateAll() {
+  try { updateTailwheelUI(); } catch (e) {}
   // Hide JS warning if JS runs
   try {
     const w = el("jsWarning");
@@ -1339,6 +1390,7 @@ function setup() {
   // Load saved state
   const st = loadState();
   applyState(st);
+  try { updateTailwheelUI(); } catch (e) {}
 
   // If Skyranger Nynja 600 is selected, always load the preset aircraft data
   // (this also corrects older saved values, e.g. CG fwd limit 0.38 -> 0.367)
@@ -1368,7 +1420,9 @@ function setup() {
     fillFromPreset(v);
   });
 
-  el("resetLimits").addEventListener("click", resetToPreset);
+  
+  el("isTailwheel").addEventListener("change", () => { updateTailwheelUI(true); updateAll(); });
+el("resetLimits").addEventListener("click", resetToPreset);
   el("btnClearAircraftData").addEventListener("click", clearAircraftData);
 
   el("btnEmptyFromWheels").addEventListener("click", () => { computeEmptyFromWheels(true); updateAll(); });
@@ -1404,6 +1458,7 @@ function setup() {
     "exName2","exWt2","exArm2",
     "exName3","exWt3","exArm3",
     "includeFixed"
+    ,"isTailwheel"
   ];
   for (const id of ids) {
     const node = el(id);
@@ -1411,6 +1466,16 @@ function setup() {
     const ev = (node.tagName === "SELECT" || node.type === "checkbox") ? "change" : "input";
     node.addEventListener(ev, () => updateAll());
     if (ev === "change") node.addEventListener("input", () => updateAll());
+  }
+
+  // Tailwheel: mark wheel arm as edited when user changes it
+  const armIn = el("armNose");
+  if (armIn) {
+    armIn.addEventListener("input", () => {
+      if (el("isTailwheel") && el("isTailwheel").checked) {
+        state.tailwheelArmEdited = true;
+      }
+    });
   }
 
   el("btnToggleChart").textContent = "Show W&B chart";
