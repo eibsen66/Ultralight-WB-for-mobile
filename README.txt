@@ -20,3 +20,8 @@ Note:
 
 
 DISCLAIMER: Use at your own risk. Verify results against approved aircraft documentation.
+
+
+Update: Nynja CG fwd limit preset is 0.367 m FoD.
+
+If you still see old values, clear site data (Safari/Chrome) or tap Reset to preset.

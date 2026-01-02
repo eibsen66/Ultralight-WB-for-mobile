@@ -1,5 +1,5 @@
 /* ASCII-only service worker */
-const CACHE_NAME = "wb-ultralight-v2-02-001";
+const CACHE_NAME = "wb-ultralight-v2-02-003";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -24,22 +24,26 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Network-first for same-origin requests so updates (like cg limit changes) appear promptly.
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
-  event.respondWith(
-    caches.match(req).then((cached) => {
+
+  event.respondWith((async () => {
+    try {
+      const resp = await fetch(req);
+      try {
+        const url = new URL(req.url);
+        if (url.origin === self.location.origin) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(req, resp.clone());
+        }
+      } catch (e) {}
+      return resp;
+    } catch (e) {
+      const cached = await caches.match(req);
       if (cached) return cached;
-      return fetch(req).then((resp) => {
-        try {
-          const url = new URL(req.url);
-          if (url.origin === self.location.origin) {
-            const copy = resp.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
-          }
-        } catch (e) {}
-        return resp;
-      }).catch(() => caches.match("./index.html"));
-    })
-  );
+      return caches.match("./index.html");
+    }
+  })());
 });

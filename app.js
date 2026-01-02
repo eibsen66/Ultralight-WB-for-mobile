@@ -75,7 +75,7 @@ const AIRCRAFT_PROFILES = {
       "datum_description": "Main wheel axle center (FoD positive, AoD negative)",
       "cg_limits_m_forward_of_datum": {
         "aft_limit": 0.21,
-        "forward_limit": 0.38
+        "forward_limit": 0.367
       },
       "arms_m": {
         "nose_wheel": 1.45,
@@ -1340,10 +1340,12 @@ function setup() {
   const st = loadState();
   applyState(st);
 
-  // On first run, if selected is Nynja but top fields are empty, load preset
-  if (el("acType").value === "Skyranger Nynja 600" && !String(el("mtow").value || "").trim()) {
+  // If Skyranger Nynja 600 is selected, always load the preset aircraft data
+  // (this also corrects older saved values, e.g. CG fwd limit 0.38 -> 0.367)
+  if (el("acType").value === "Skyranger Nynja 600") {
     fillFromPreset("Skyranger Nynja 600");
   }
+
 
   // Listeners
   el("acType").addEventListener("change", () => {
