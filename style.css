@@ -186,3 +186,7 @@ input.danger {
   color: #111827;
   border: 2px solid #b91c1c;
 }
+
+
+/* Tandem seating control */
+.checkbox.tandem { font-weight: 700; }

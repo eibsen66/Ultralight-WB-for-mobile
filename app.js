@@ -181,6 +181,7 @@ const state = {
 
 function defaultState() {
   return {
+    isTandem: false,
     isTailwheel: false,
     tailwheelArmEdited: false,
     acType: "Skyranger Nynja 600",
@@ -248,6 +249,7 @@ function saveState() {
 
 function collectState() {
   return {
+    isTandem: el("isTandem").checked,
     acType: el("acType").value,
     isTailwheel: el("isTailwheel").checked,
     tailwheelArmEdited: !!state.tailwheelArmEdited,
@@ -1352,7 +1354,31 @@ function updateTailwheelUI(userToggled=false) {
   }
 }
 
+
+function updateTandemUI() {
+  const t = el("isTandem");
+  const isT = !!(t && t.checked);
+
+  const pField = el("pilotSeatField");
+  const xField = el("paxSeatField");
+  if (pField) pField.style.display = isT ? "none" : "";
+  if (xField) xField.style.display = isT ? "none" : "";
+
+  // Fix seat position values to a stable value when hidden
+  if (isT) {
+    try { el("pilotSeat").value = "aft"; } catch (e) {}
+    try { el("paxSeat").value = "aft"; } catch (e) {}
+  }
+
+  const hint = el("tandemHint");
+  if (hint) {
+    hint.textContent = isT ? "For tandem: set pilot and passenger seat arms in Aircraft data." : "";
+  }
+}
+
+
 function updateAll() {
+  try { updateTandemUI(); } catch (e) {}
   try { updateTailwheelUI(); } catch (e) {}
   // Hide JS warning if JS runs
   try {
@@ -1422,6 +1448,7 @@ function setup() {
 
   
   el("isTailwheel").addEventListener("change", () => { updateTailwheelUI(true); updateAll(); });
+  el("isTandem").addEventListener("change", () => { updateTandemUI(); updateAll(); });
 el("resetLimits").addEventListener("click", resetToPreset);
   el("btnClearAircraftData").addEventListener("click", clearAircraftData);
 
@@ -1459,6 +1486,7 @@ el("resetLimits").addEventListener("click", resetToPreset);
     "exName3","exWt3","exArm3",
     "includeFixed"
     ,"isTailwheel"
+      ,"isTandem"
   ];
   for (const id of ids) {
     const node = el(id);
