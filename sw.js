@@ -1,0 +1,51 @@
+/* ASCII-only service worker */
+const CACHE_NAME = "wb-ultralight-v2-01-pwa-002";
+const PRECACHE = [
+  "./",
+  "./index.html",
+  "./style.css",
+  "./app.js",
+  "./manifest.webmanifest",
+  "./icon-192.png",
+  "./icon-512.png"
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(
+      keys.map((k) => (k === CACHE_NAME ? Promise.resolve() : caches.delete(k)))
+    )).then(() => self.clients.claim())
+  );
+});
+
+// Cache-first for app shell; network fallback for anything else.
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  event.respondWith(
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req).then((resp) => {
+        // Best effort: cache same-origin GET responses
+        try {
+          const url = new URL(req.url);
+          if (url.origin === self.location.origin) {
+            const copy = resp.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+          }
+        } catch (e) {}
+        return resp;
+      }).catch(() => {
+        // If offline and not cached, try returning the app shell.
+        return caches.match("./index.html");
+      });
+    })
+  );
+});

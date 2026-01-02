@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>W&B for Ultralight Version 2.01 (Web)</title>
+  <meta name="theme-color" content="#0b1020">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="W&B">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style id="inline-css">
+/* ASCII-only CSS */
+:root {
+  --bg: #0f172a;
+  --card: #111827;
+  --card2: #0b1220;
+  --text: #e5e7eb;
+  --muted: #a3a3a3;
+  --line: #243244;
+  --btn: #2563eb;
+  --btn2: #334155;
+  --warn: #fff2a8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: linear-gradient(180deg, #0b1020, #060913);
+  color: var(--text);
+}
+
+.app-header {
+  padding: 14px 14px 8px 14px;
+}
+
+.title { max-width: 1100px; margin: 0 auto; }
+.app-name { font-size: 20px; font-weight: 700; }
+.app-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+#app { max-width: 1100px; margin: 0 auto; padding: 10px 14px 24px 14px; }
+
+.card {
+  background: radial-gradient(1200px 600px at 20% 10%, rgba(37,99,235,0.18), rgba(0,0,0,0)), var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 10px 0;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.32);
+}
+
+.card-title {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.card-sub { color: var(--muted); }
+
+.banner {
+  margin-top: 10px;
+  padding: 10px;
+  background: var(--card2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 13px;
+  color: #d1d5db;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  margin-top: 8px;
+}
+
+.row.wrap { flex-wrap: wrap; }
+.spacer { flex: 1; }
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 920px) {
+  .grid2 { grid-template-columns: 1fr 1fr; }
+}
+
+.grid4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+@media (min-width: 720px) {
+  .grid4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+}
+
+.field { min-width: 160px; }
+.field.tight { min-width: 160px; }
+label { display: block; font-size: 12px; color: #cbd5e1; margin-bottom: 4px; }
+
+input, select {
+  width: 100%;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #0a0f1e;
+  color: var(--text);
+  font-size: 14px;
+}
+
+input.warn { background: var(--warn); color: #111827; }
+
+.hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.btn {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: var(--btn);
+  color: white;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 42px;
+}
+
+.btn.secondary {
+  background: var(--btn2);
+}
+
+.btn:active { transform: translateY(1px); }
+
+.results {
+  background: #0a0f1e;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  min-height: 220px;
+  white-space: pre-wrap;
+  font-size: 12px;
+  overflow: auto;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  background: #0a0f1e;
+  border-radius: 12px;
+}
+
+.extra { margin-top: 10px; }
+.extra-title { font-weight: 600; margin-bottom: 8px; }
+.extra-grid {
+  display: grid;
+  grid-template-columns: 1fr 140px 140px;
+  gap: 8px;
+}
+.extra-h { font-size: 12px; color: #cbd5e1; }
+
+.mini { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #d1d5db;
+}
+
+.checkbox input { width: 18px; height: 18px; }
+
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 50;
+}
+
+.modal {
+  position: fixed;
+  top: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(980px, 92vw);
+  max-height: 86vh;
+  overflow: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  z-index: 60;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+
+.modal-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-title { font-weight: 800; }
+.modal-body { padding: 12px; }
+
+.modal-table {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 140px 140px 90px;
+  gap: 8px;
+}
+.modal-table .h { font-size: 12px; color: #cbd5e1; }
+
+.help { white-space: pre-wrap; font-size: 12px; background: #0a0f1e; border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+
+
+
+  body.printing .app-header, body.printing .card, body.printing #chartCard { display: none !important; }
+  body.printing .print-only { display: block !important; }
+  body.printing #printHeader { margin: 0 0 8mm 0; }
+  body.printing .print-reg { text-align: center; font-size: 18px; font-weight: 800; margin-bottom: 3mm; }
+  body.printing .print-title { font-size: 14px; font-weight: 800; }
+  body.printing .print-sub { font-size: 11px; margin-top: 1mm; }
+  body.printing #printResults { border: 1px solid #999; background: white; color: black; font-size: 10px; min-height: auto; }
+  body.printing #printChart { border: 1px solid #999; background: white; }
+}
+
+
+/* Phone tweaks */
+@media (max-width: 520px) {
+  .field { min-width: 0; }
+  .row { align-items: stretch; }
+  .btn { width: 100%; }
+  .extra-grid { grid-template-columns: 1fr 1fr; }
+  .extra-grid .extra-h:nth-child(3) { display: none; }
+  .extra-grid input:nth-child(3n) { display: none; } /* hide arm column on tiny screens */
+}
+
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="title">
+      <div class="app-name">W&amp;B for Ultralight Version 2.01 (Web)</div>
+      <div class="app-sub">Local web app for iPad/desktop. Save as PDF using Print.</div>
+    </div>
+  </header>
+
+  <main id="app">
+    <section class="card">
+      <div class="row wrap">
+        <div class="field">
+          <label for="reg">Aircraft Registration</label>
+          <input id="reg" type="text" maxlength="20" placeholder="e.g. TF-ABC">
+          <div class="hint">&nbsp;</div>
+        </div>
+
+        <div class="field">
+          <label for="fuelCap">Fuel Capacity (L)</label>
+          <input id="fuelCap" type="number" inputmode="decimal" step="0.1">
+          <div class="hint">Yellow if not 73 L</div>
+        </div>
+
+        <div class="field">
+          <label for="mtow">MTOW (kg)</label>
+          <input id="mtow" type="number" inputmode="decimal" step="0.1">
+          <div class="hint">Yellow if changed</div>
+        </div>
+
+        <div class="field">
+          <label for="cgAft">CG aft limit (m FoD)</label>
+          <input id="cgAft" type="number" inputmode="decimal" step="0.001">
+          <div class="hint">Yellow if changed</div>
+        </div>
+
+        <div class="field">
+          <label for="cgFwd">CG fwd limit (m FoD)</label>
+          <input id="cgFwd" type="number" inputmode="decimal" step="0.001">
+          <div class="hint">Yellow if changed</div>
+        </div>
+
+        <div class="field tight">
+          <label>&nbsp;</label>
+          <button id="resetLimits" class="btn secondary">Reset MTOW/limits</button>
+        </div>
+      </div>
+
+      <div class="banner" id="banner"></div>
+    </section>
+
+    <section class="grid2">
+      <section class="card">
+        <div class="card-title">1) Empty baseline from wheel loads</div>
+        <div class="row">
+          <div class="field">
+            <label for="noseLoad">Nose wheel load (kg)</label>
+            <input id="noseLoad" type="number" inputmode="decimal" step="0.1">
+          </div>
+          <div class="field">
+            <label for="leftLoad">Left main load (kg)</label>
+            <input id="leftLoad" type="number" inputmode="decimal" step="0.1">
+          </div>
+          <div class="field">
+            <label for="rightLoad">Right main load (kg)</label>
+            <input id="rightLoad" type="number" inputmode="decimal" step="0.1">
+          </div>
+        </div>
+        <div class="row">
+          <button id="btnEmptyFromWheels" class="btn">Compute EMPTY from wheel loads</button>
+          <button id="btnCopyEmpty" class="btn secondary">Copy computed EMPTY to baseline</button>
+        </div>
+
+        <div class="mini card-sub" id="emptyFromWheelsSummary"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-title">2) Empty baseline values</div>
+        <div class="row">
+          <div class="field">
+            <label for="emptyWt">Empty weight (kg)</label>
+            <input id="emptyWt" type="number" inputmode="decimal" step="0.1">
+          </div>
+          <div class="field">
+            <label for="emptyMoment">Empty moment (kg*m)</label>
+            <input id="emptyMoment" type="number" inputmode="decimal" step="0.1">
+          </div>
+        </div>
+
+        <div class="row wrap">
+          <label class="checkbox">
+            <input id="includeFixed" type="checkbox">
+            Include FIXED ITEMS from config (only if NOT already in baseline)
+          </label>
+        </div>
+
+        <div class="mini card-sub" id="fixedItemsInfo"></div>
+      </section>
+    </section>
+
+    <section class="card">
+      <div class="card-title">3) Loading</div>
+
+      <div class="grid4">
+        <div class="field">
+          <label for="pilotKg">Pilot (kg)</label>
+          <input id="pilotKg" type="number" inputmode="decimal" step="0.1">
+        </div>
+        <div class="field">
+          <label for="paxKg">Passenger (kg)</label>
+          <input id="paxKg" type="number" inputmode="decimal" step="0.1">
+        </div>
+        <div class="field">
+          <label for="fuelL">Fuel (litres)</label>
+          <input id="fuelL" type="number" inputmode="decimal" step="0.1">
+        </div>
+        <div class="field">
+          <label for="baggageKg">Baggage (kg)</label>
+          <input id="baggageKg" type="number" inputmode="decimal" step="0.1">
+        </div>
+      </div>
+
+      <div class="grid4">
+        <div class="field">
+          <label for="pilotSeat">Pilot seat position</label>
+          <select id="pilotSeat">
+            <option value="aft">aft</option>
+            <option value="fwd">fwd</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="paxSeat">Pax seat position</label>
+          <select id="paxSeat">
+            <option value="aft">aft</option>
+            <option value="fwd">fwd</option>
+          </select>
+        </div>
+        <div class="field tight">
+          <label>&nbsp;</label>
+          <button id="btnComputeLoaded" class="btn">Compute LOADED W&amp;B</button>
+        </div>
+        <div class="field tight">
+          <label>&nbsp;</label>
+          <button id="btnToggleChart" class="btn secondary">Show W&amp;B chart</button>
+        </div>
+      </div>
+
+      <div class="extra">
+        <div class="extra-title">Extra items (optional) - 3 quick rows</div>
+        <div class="extra-grid">
+          <div class="extra-h">Name</div>
+          <div class="extra-h">Weight (kg)</div>
+          <div class="extra-h">Arm (m)</div>
+
+          <input id="exName1" type="text" maxlength="80">
+          <input id="exWt1" type="number" inputmode="decimal" step="0.1">
+          <input id="exArm1" type="number" inputmode="decimal" step="0.001">
+
+          <input id="exName2" type="text" maxlength="80">
+          <input id="exWt2" type="number" inputmode="decimal" step="0.1">
+          <input id="exArm2" type="number" inputmode="decimal" step="0.001">
+
+          <input id="exName3" type="text" maxlength="80">
+          <input id="exWt3" type="number" inputmode="decimal" step="0.1">
+          <input id="exArm3" type="number" inputmode="decimal" step="0.001">
+        </div>
+
+        <div class="row">
+          <div class="mini" id="moreCount">More items: 0</div>
+          <div class="spacer"></div>
+          <button id="btnMoreItems" class="btn secondary">More...</button>
+          <button id="btnClearExtras" class="btn secondary">Clear all extra items</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="btnPrint" class="btn">Print/Export Loadsheet (PDF)</button>
+        <button id="btnHelp" class="btn secondary">Help</button>
+      </div>
+    </section>
+
+    <section class="grid2">
+      <section class="card">
+        <div class="card-title">Results</div>
+        <pre id="results" class="results"></pre>
+      </section>
+
+      <section class="card" id="chartCard" style="display:none;">
+        <div class="card-title">W&amp;B chart</div>
+        <canvas id="chart" width="640" height="480" class="chart"></canvas>
+        <div class="mini card-sub">Updated automatically when inputs change.</div>
+      </section>
+    </section>
+</main>
+
+  <!-- More items modal -->
+  <div id="modalBackdrop" class="modal-backdrop" style="display:none;"></div>
+  <div id="moreModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="moreTitle">
+    <div class="modal-head">
+      <div id="moreTitle" class="modal-title">Extra items - additional list</div>
+      <button id="btnCloseMore" class="btn secondary">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="mini">Add as many items as needed here. These are added to the 3 quick rows.</div>
+      <div class="modal-table" id="moreTable"></div>
+      <div class="row">
+        <button id="btnAddMoreRow" class="btn secondary">Add row</button>
+        <div class="spacer"></div>
+        <button id="btnMoreOK" class="btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help modal -->
+  <div id="helpModal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="modal-head">
+      <div id="helpTitle" class="modal-title">Help</div>
+      <button id="btnCloseHelp" class="btn secondary">Close</button>
+    </div>
+    <div class="modal-body">
+      <pre id="helpText" class="help"></pre>
+    </div>
+  </div>
+  <script id="inline-js">
+
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/* PWA offline */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+
+/* ASCII-only JS */
+
+const DEFAULT_CONFIG = {
+  "aircraft_name": "SkyRanger Nynja LS 600",
+  "units": {
+    "weight": "kg",
+    "arm": "m"
+  },
+  "mtow_kg": 600.0,
+  "datum_description": "Main wheel axle center (FoD positive, AoD negative)",
+  "cg_limits_m_forward_of_datum": {
+    "aft_limit": 0.21,
+    "forward_limit": 0.38
+  },
+  "arms_m": {
+    "nose_wheel": 1.45,
+    "left_main_wheel": 0.0,
+    "right_main_wheel": 0.0,
+    "pilot_seat": {
+      "aft_most": 0.15,
+      "fwd_most": 0.15
+    },
+    "passenger_seat": {
+      "aft_most": 0.15,
+      "fwd_most": 0.15
+    },
+    "fuel": -0.29,
+    "baggage": -0.29
+  },
+  "limits": {
+    "seat_min_kg": 55.0,
+    "seat_max_kg": 120.0,
+    "total_seat_min_kg": 172.0,
+    "baggage_max_kg": 10.0
+  },
+  "fuel": {
+    "capacity_l": 73.0,
+    "density_kg_per_l": 0.7
+  },
+  "index": {
+    "moment_index_divisor": 1.0
+  },
+  "fixed_items": [
+    {
+      "name": "Aluminium fuel tank (empty) 7.5 kg (include only if not already in baseline)",
+      "weight_kg": 7.5,
+      "arm_m": -0.29
+    }
+  ]
+};
+
+const STORAGE_KEY = "wb_ultralight_state_v2_01_web";
+
+function el(id) {
+  return document.getElementById(id);
+}
+
+function fmt2(x) {
+  if (!isFinite(x)) return "nan";
+  return x.toFixed(2);
+}
+function fmt3(x) {
+  if (!isFinite(x)) return "nan";
+  return x.toFixed(3);
+}
+
+function safeNum(v, defVal=0) {
+  if (v === null || v === undefined) return defVal;
+  const s = String(v).trim();
+  if (!s) return defVal;
+  const n = Number(s);
+  if (!isFinite(n)) throw new Error("Invalid number: " + s);
+  return n;
+}
+
+function clampText(v, maxLen) {
+  const s = String(v || "").trim();
+  if (s.length <= maxLen) return s;
+  return s.slice(0, maxLen);
+}
+
+function nowStamp() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const da = String(d.getDate()).padStart(2,"0");
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  return y + "-" + m + "-" + da + " " + hh + ":" + mm;
+}
+
+const state = {
+  moreItems: []
+};
+
+function defaults() {
+  return {
+    reg: "",
+    fuelCap: DEFAULT_CONFIG.fuel.capacity_l,
+    mtow: DEFAULT_CONFIG.mtow_kg,
+    cgAft: DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit,
+    cgFwd: DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit,
+
+    noseLoad: "",
+    leftLoad: "",
+    rightLoad: "",
+
+    emptyWt: "",
+    emptyMoment: "",
+
+    includeFixed: false,
+
+    pilotKg: "",
+    paxKg: "",
+    fuelL: "",
+    baggageKg: "",
+
+    pilotSeat: "aft",
+    paxSeat: "aft",
+
+    exName1: "", exWt1: "", exArm1: "",
+    exName2: "", exWt2: "", exArm2: "",
+    exName3: "", exWt3: "", exArm3: "",
+
+    moreItems: []
+  };
+}
+
+function loadState() {
+  const d = defaults();
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return d;
+    const obj = JSON.parse(raw);
+    return Object.assign(d, obj || {});
+  } catch (e) {
+    return d;
+  }
+}
+
+function saveState() {
+  const obj = collectState();
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  } catch (e) {
+    // ignore
+  }
+}
+
+function collectState() {
+  return {
+    reg: clampText(el("reg").value, 20),
+    fuelCap: el("fuelCap").value,
+    mtow: el("mtow").value,
+    cgAft: el("cgAft").value,
+    cgFwd: el("cgFwd").value,
+
+    noseLoad: el("noseLoad").value,
+    leftLoad: el("leftLoad").value,
+    rightLoad: el("rightLoad").value,
+
+    emptyWt: el("emptyWt").value,
+    emptyMoment: el("emptyMoment").value,
+
+    includeFixed: el("includeFixed").checked,
+
+    pilotKg: el("pilotKg").value,
+    paxKg: el("paxKg").value,
+    fuelL: el("fuelL").value,
+    baggageKg: el("baggageKg").value,
+
+    pilotSeat: el("pilotSeat").value,
+    paxSeat: el("paxSeat").value,
+
+    exName1: el("exName1").value, exWt1: el("exWt1").value, exArm1: el("exArm1").value,
+    exName2: el("exName2").value, exWt2: el("exWt2").value, exArm2: el("exArm2").value,
+    exName3: el("exName3").value, exWt3: el("exWt3").value, exArm3: el("exArm3").value,
+
+    moreItems: state.moreItems
+  };
+}
+
+function applyState(obj) {
+  el("reg").value = obj.reg || "";
+  el("fuelCap").value = obj.fuelCap !== undefined ? obj.fuelCap : DEFAULT_CONFIG.fuel.capacity_l;
+  el("mtow").value = obj.mtow !== undefined ? obj.mtow : DEFAULT_CONFIG.mtow_kg;
+  el("cgAft").value = obj.cgAft !== undefined ? obj.cgAft : DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit;
+  el("cgFwd").value = obj.cgFwd !== undefined ? obj.cgFwd : DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit;
+
+  el("noseLoad").value = obj.noseLoad || "";
+  el("leftLoad").value = obj.leftLoad || "";
+  el("rightLoad").value = obj.rightLoad || "";
+
+  el("emptyWt").value = obj.emptyWt || "";
+  el("emptyMoment").value = obj.emptyMoment || "";
+
+  el("includeFixed").checked = !!obj.includeFixed;
+
+  el("pilotKg").value = obj.pilotKg || "";
+  el("paxKg").value = obj.paxKg || "";
+  el("fuelL").value = obj.fuelL || "";
+  el("baggageKg").value = obj.baggageKg || "";
+
+  el("pilotSeat").value = obj.pilotSeat || "aft";
+  el("paxSeat").value = obj.paxSeat || "aft";
+
+  el("exName1").value = obj.exName1 || ""; el("exWt1").value = obj.exWt1 || ""; el("exArm1").value = obj.exArm1 || "";
+  el("exName2").value = obj.exName2 || ""; el("exWt2").value = obj.exWt2 || ""; el("exArm2").value = obj.exArm2 || "";
+  el("exName3").value = obj.exName3 || ""; el("exWt3").value = obj.exWt3 || ""; el("exArm3").value = obj.exArm3 || "";
+
+  state.moreItems = Array.isArray(obj.moreItems) ? obj.moreItems : [];
+  updateMoreCount();
+}
+
+function getMtow() {
+  const s = String(el("mtow").value || "").trim();
+  const v0 = Number(DEFAULT_CONFIG.mtow_kg);
+  if (!s) return v0;
+  const v = Number(s);
+  if (!isFinite(v) || v <= 0) return v0;
+  return v;
+}
+
+function getLimits() {
+  const a0 = Number(DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit);
+  const f0 = Number(DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit);
+
+  const aS = String(el("cgAft").value || "").trim();
+  const fS = String(el("cgFwd").value || "").trim();
+
+  const a = aS ? Number(aS) : a0;
+  const f = fS ? Number(fS) : f0;
+
+  const lo = Math.min(a, f);
+  const hi = Math.max(a, f);
+  return [lo, hi];
+}
+
+function getFuelCap() {
+  const v0 = Number(DEFAULT_CONFIG.fuel.capacity_l);
+  const s = String(el("fuelCap").value || "").trim();
+  if (!s) return v0;
+  const v = Number(s);
+  if (!isFinite(v) || v <= 0) return v0;
+  return v;
+}
+
+function getSeatArm(who, pos) {
+  const arms = DEFAULT_CONFIG.arms_m;
+  const seat = (who === "pilot") ? arms.pilot_seat : arms.passenger_seat;
+  // This aircraft has same for fwd/aft, but keep logic.
+  if (pos === "fwd") {
+    return Number(seat.fwd_most);
+  }
+  return Number(seat.aft_most);
+}
+
+function getIndexDivisor() {
+  const d = Number(DEFAULT_CONFIG.index.moment_index_divisor);
+  return (d === 0) ? 1 : d;
+}
+
+function fixedItemsTotals() {
+  const items = Array.isArray(DEFAULT_CONFIG.fixed_items) ? DEFAULT_CONFIG.fixed_items : [];
+  let tw = 0;
+  let tm = 0;
+  const lines = [];
+  for (const it of items) {
+    const name = String(it.name || "item");
+    const w = Number(it.weight_kg || 0);
+    const arm = Number(it.arm_m || 0);
+    if (!isFinite(w) || !isFinite(arm) || Math.abs(w) < 1e-12) continue;
+    tw += w;
+    tm += w * arm;
+    lines.push("  + " + name + ": " + fmt3(w) + " kg at " + fmt3(arm) + " m -> " + fmt3(w*arm) + " kg*m");
+  }
+  return {
+    tw: tw,
+    tm: tm,
+    lines: lines.length ? lines.join("
+") : "  (none)"
+  };
+}
+
+function calcFromWheels(nose, left, right) {
+  const arms = DEFAULT_CONFIG.arms_m;
+  const totalWt = nose + left + right;
+  const totalMom = nose * Number(arms.nose_wheel) + left * Number(arms.left_main_wheel) + right * Number(arms.right_main_wheel);
+  const cg = totalWt ? totalMom / totalWt : NaN;
+  const idx = totalMom / getIndexDivisor();
+  return {
+    weight_kg: totalWt,
+    moment_kgm: totalMom,
+    cg_m: cg,
+    index: idx
+  };
+}
+
+function currentEmptyPoint() {
+  const wtS = String(el("emptyWt").value || "").trim();
+  const momS = String(el("emptyMoment").value || "").trim();
+  if (wtS && momS) {
+    const wt = safeNum(wtS);
+    const mom = safeNum(momS);
+    if (wt > 0) {
+      return {
+        weight_kg: wt,
+        moment_kgm: mom,
+        cg_m: mom / wt,
+        index: mom / getIndexDivisor()
+      };
+    }
+  }
+
+  const noseS = String(el("noseLoad").value || "").trim();
+  const leftS = String(el("leftLoad").value || "").trim();
+  const rightS = String(el("rightLoad").value || "").trim();
+  if (!(noseS && leftS && rightS)) return null;
+
+  const nose = safeNum(noseS);
+  const left = safeNum(leftS);
+  const right = safeNum(rightS);
+  if (nose + left + right <= 0) return null;
+  return calcFromWheels(nose, left, right);
+}
+
+function readExtraItems() {
+  const out = [];
+  function addOne(nameId, wtId, armId) {
+    const name = String(el(nameId).value || "").trim();
+    if (!name) return;
+    const w = safeNum(el(wtId).value, 0);
+    const arm = safeNum(el(armId).value, 0);
+    if (Math.abs(w) < 1e-12) return;
+    out.push([name, w, arm]);
+  }
+  addOne("exName1","exWt1","exArm1");
+  addOne("exName2","exWt2","exArm2");
+  addOne("exName3","exWt3","exArm3");
+
+  for (const it of state.moreItems) {
+    const name = String(it.name || "").trim();
+    if (!name) continue;
+    const w = Number(it.weight || 0);
+    const arm = Number(it.arm || 0);
+    if (!isFinite(w) || !isFinite(arm) || Math.abs(w) < 1e-12) continue;
+    out.push([name, w, arm]);
+  }
+  return out;
+}
+
+function calcLoaded(emptyWt, emptyMom) {
+  const fuelCfg = DEFAULT_CONFIG.fuel;
+  const dens = Number(fuelCfg.density_kg_per_l);
+  const cap = getFuelCap();
+
+  const pilot = safeNum(el("pilotKg").value, 0);
+  const pax = safeNum(el("paxKg").value, 0);
+  const fuelL = safeNum(el("fuelL").value, 0);
+  const baggage = safeNum(el("baggageKg").value, 0);
+
+  if (fuelL < 0) throw new Error("Fuel litres cannot be negative.");
+  if (cap > 0 && fuelL > cap) throw new Error("Fuel litres exceed capacity (" + fmt1(cap) + " L).");
+
+  let wt = emptyWt;
+  let mom = emptyMom;
+
+  let fixedWt = 0;
+  let fixedMom = 0;
+  let fixedDetail = "  (none)";
+  if (el("includeFixed").checked) {
+    const fx = fixedItemsTotals();
+    fixedWt = fx.tw;
+    fixedMom = fx.tm;
+    fixedDetail = fx.lines;
+    wt += fixedWt;
+    mom += fixedMom;
+  }
+
+  if (pilot) {
+    wt += pilot;
+    mom += pilot * getSeatArm("pilot", el("pilotSeat").value);
+  }
+  if (pax) {
+    wt += pax;
+    mom += pax * getSeatArm("pax", el("paxSeat").value);
+  }
+
+  const fuelKg = fuelL * dens;
+  if (fuelKg) {
+    wt += fuelKg;
+    mom += fuelKg * Number(DEFAULT_CONFIG.arms_m.fuel);
+  }
+  if (baggage) {
+    wt += baggage;
+    mom += baggage * Number(DEFAULT_CONFIG.arms_m.baggage);
+  }
+
+  const extra = readExtraItems();
+  const extraLines = [];
+  for (const [name, w, arm] of extra) {
+    wt += w;
+    mom += w * arm;
+    extraLines.push("  + " + name + ": " + fmt3(w) + " kg at " + fmt3(arm) + " m -> " + fmt3(w*arm) + " kg*m");
+  }
+
+  const cg = wt ? mom / wt : NaN;
+  const idx = mom / getIndexDivisor();
+
+  return {
+    weight_kg: wt,
+    moment_kgm: mom,
+    cg_m: cg,
+    index: idx,
+    fuel_kg: fuelKg,
+    fixed_wt: fixedWt,
+    fixed_mom: fixedMom,
+    fixed_detail: fixedDetail,
+    extra_detail: extraLines.length ? extraLines.join("
+") : "  (none)",
+    pilot: pilot,
+    pax: pax,
+    baggage: baggage,
+    fuel_l: fuelL
+  };
+}
+
+function fmt1(x) {
+  if (!isFinite(x)) return "nan";
+  return x.toFixed(1);
+}
+
+function statusLines(totalWt, cg, pilot, pax, baggage) {
+  const mtow = getMtow();
+  const [lo, hi] = getLimits();
+
+  const withinW = totalWt <= mtow + 1e-9;
+  const withinCg = (cg >= lo - 1e-12) && (cg <= hi + 1e-12);
+
+  const lim = DEFAULT_CONFIG.limits;
+  const seatMin = Number(lim.seat_min_kg);
+  const seatMax = Number(lim.seat_max_kg);
+  const totalSeatMin = Number(lim.total_seat_min_kg);
+  const bagMax = Number(lim.baggage_max_kg);
+
+  const seatW = pilot + pax;
+
+  let seatNote = "Seat limits: OK";
+  if (pilot && (pilot < seatMin || pilot > seatMax)) seatNote = "Seat limits: PILOT outside " + fmt0(seatMin) + ".." + fmt0(seatMax) + " kg";
+  if (pax && (pax < seatMin || pax > seatMax)) {
+    if (seatNote === "Seat limits: OK") seatNote = "Seat limits: PAX outside " + fmt0(seatMin) + ".." + fmt0(seatMax) + " kg";
+    else seatNote += " AND PAX outside " + fmt0(seatMin) + ".." + fmt0(seatMax) + " kg";
+  }
+
+  let totalNote = "Total seat weight: OK";
+  if (seatW && seatW < totalSeatMin) totalNote = "Total seat weight: " + fmt1(seatW) + " kg is below " + fmt1(totalSeatMin) + " kg (placard if used)";
+
+  let bagNote = "Baggage limit: OK";
+  if (baggage > bagMax + 1e-9) bagNote = "Baggage limit: OVER (" + fmt1(baggage) + " kg > " + fmt1(bagMax) + " kg)";
+
+  return [
+    "MTOW check: " + fmt2(totalWt) + " kg <= " + fmt1(mtow) + " kg -> " + (withinW ? "OK" : "OVER"),
+    "CG check: " + fmt3(cg) + " m in [" + fmt3(lo) + ".." + fmt3(hi) + "] -> " + (withinCg ? "OK" : "OUT OF LIMITS"),
+    seatNote,
+    totalNote,
+    bagNote
+  ];
+}
+
+function fmt0(x) {
+  if (!isFinite(x)) return "nan";
+  return String(Math.round(x));
+}
+
+let lastEmptyComputed = null;
+
+function computeEmptyFromWheels(showError=true) {
+  try {
+    const nose = safeNum(el("noseLoad").value);
+    const left = safeNum(el("leftLoad").value);
+    const right = safeNum(el("rightLoad").value);
+    const res = calcFromWheels(nose,left,right);
+    lastEmptyComputed = res;
+    el("emptyFromWheelsSummary").textContent =
+      "Computed EMPTY: weight " + fmt2(res.weight_kg) + " kg, moment " + fmt3(res.moment_kgm) + " kg*m, CG " + fmt3(res.cg_m) + " m FoD, index " + fmt3(res.index);
+    return res;
+  } catch (e) {
+    lastEmptyComputed = null;
+    el("emptyFromWheelsSummary").textContent = "";
+    if (showError) alert(e.message || String(e));
+    return null;
+  }
+}
+
+function copyComputedEmpty() {
+  if (!lastEmptyComputed) {
+    const res = computeEmptyFromWheels(false);
+    if (!res) {
+      alert("Compute EMPTY from wheel loads first.");
+      return;
+    }
+  }
+  el("emptyWt").value = fmt3(lastEmptyComputed.weight_kg);
+  el("emptyMoment").value = fmt3(lastEmptyComputed.moment_kgm);
+  updateAll();
+}
+
+function computeLoaded(showError=true) {
+  try {
+    const empty = currentEmptyPoint();
+    if (!empty) throw new Error("Enter baseline (weight + moment) or fill all 3 wheel loads.");
+    const res = calcLoaded(empty.weight_kg, empty.moment_kgm);
+    return { empty: empty, loaded: res };
+  } catch (e) {
+    if (showError) alert(e.message || String(e));
+    return null;
+  }
+}
+
+function buildResultsText(bundle) {
+  const lines = [];
+  const [lo, hi] = getLimits();
+  const mtow = getMtow();
+  const cap = getFuelCap();
+
+  lines.push("W&B for Ultralight Version 2.01 (Web)");
+  lines.push("Date/time: " + nowStamp());
+  lines.push("Aircraft: " + DEFAULT_CONFIG.aircraft_name);
+  lines.push("Datum: " + DEFAULT_CONFIG.datum_description);
+  lines.push("Fuel capacity: " + fmt1(cap) + " L");
+  lines.push("MTOW: " + fmt1(mtow) + " kg");
+  lines.push("CG limits (m FoD): " + fmt3(lo) + " .. " + fmt3(hi));
+  lines.push("");
+
+  if (bundle && bundle.empty) {
+    const e = bundle.empty;
+    lines.push("EMPTY");
+    lines.push("  Weight: " + fmt2(e.weight_kg) + " kg");
+    lines.push("  Moment: " + fmt3(e.moment_kgm) + " kg*m");
+    lines.push("  CG:     " + fmt3(e.cg_m) + " m FoD");
+    lines.push("  Index:  " + fmt3(e.index));
+  } else {
+    lines.push("EMPTY: (not available)");
+  }
+  lines.push("");
+
+  lines.push("LOAD INPUTS");
+  lines.push("  Pilot:     " + fmt1(safeNum(el("pilotKg").value, 0)) + " kg (" + el("pilotSeat").value + ")");
+  lines.push("  Passenger: " + fmt1(safeNum(el("paxKg").value, 0)) + " kg (" + el("paxSeat").value + ")");
+  lines.push("  Fuel:      " + fmt1(safeNum(el("fuelL").value, 0)) + " L");
+  lines.push("  Baggage:   " + fmt1(safeNum(el("baggageKg").value, 0)) + " kg");
+  lines.push("  Include fixed items: " + (el("includeFixed").checked ? "YES" : "NO"));
+  lines.push("");
+
+  if (bundle && bundle.loaded) {
+    const r = bundle.loaded;
+    lines.push("LOADED");
+    lines.push("  Weight: " + fmt2(r.weight_kg) + " kg");
+    lines.push("  Moment: " + fmt3(r.moment_kgm) + " kg*m");
+    lines.push("  CG:     " + fmt3(r.cg_m) + " m FoD");
+    lines.push("  Index:  " + fmt3(r.index));
+    lines.push("");
+    lines.push("Checks:");
+    for (const ln of statusLines(r.weight_kg, r.cg_m, r.pilot, r.pax, r.baggage)) lines.push("  " + ln);
+    lines.push("");
+    if (el("includeFixed").checked) {
+      lines.push("Fixed items included:");
+      lines.push(r.fixed_detail);
+      lines.push("Fixed items total: " + fmt3(r.fixed_wt) + " kg, " + fmt3(r.fixed_mom) + " kg*m");
+      lines.push("");
+    }
+    lines.push("Extra items:");
+    lines.push(r.extra_detail);
+  } else {
+    lines.push("LOADED: (not available)");
+  }
+
+  return lines.join("
+");
+}
+
+function updateBanner() {
+  const reg = String(el("reg").value || "").trim().toUpperCase();
+  const mtow = getMtow();
+  const [lo, hi] = getLimits();
+  const cap = getFuelCap();
+
+  let regTxt = reg ? (" | Reg: " + reg) : "";
+  el("banner").textContent =
+    "Aircraft: " + DEFAULT_CONFIG.aircraft_name + regTxt +
+    " | Datum: " + DEFAULT_CONFIG.datum_description +
+    " | MTOW: " + fmt1(mtow) + " kg" +
+    " | CG limits: " + fmt3(lo) + ".." + fmt3(hi) + " m FoD" +
+    " | Fuel cap: " + fmt1(cap) + " L";
+}
+
+function updateHighlights() {
+  function setWarn(input, isWarn) {
+    if (isWarn) input.classList.add("warn");
+    else input.classList.remove("warn");
+  }
+  const mtow0 = Number(DEFAULT_CONFIG.mtow_kg);
+  const a0 = Number(DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit);
+  const f0 = Number(DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit);
+
+  const mtow = getMtow();
+  const [lo, hi] = getLimits();
+  const cap = getFuelCap();
+
+  setWarn(el("mtow"), Math.abs(mtow - mtow0) > 1e-9);
+  // Compare entered values, not sorted, to preserve intent. If swapped, highlight.
+  const aEntered = safeNum(el("cgAft").value, a0);
+  const fEntered = safeNum(el("cgFwd").value, f0);
+  setWarn(el("cgAft"), Math.abs(aEntered - a0) > 1e-9);
+  setWarn(el("cgFwd"), Math.abs(fEntered - f0) > 1e-9);
+
+  // Fuel cap highlight rule: yellow if not 73 L
+  setWarn(el("fuelCap"), Math.abs(cap - 73.0) > 1e-9);
+}
+
+function updateFixedInfo() {
+  const fx = fixedItemsTotals();
+  const cap = getFuelCap();
+  const dens = Number(DEFAULT_CONFIG.fuel.density_kg_per_l);
+  let lines = [];
+  lines.push("Fuel density: " + fmt3(dens) + " kg/L");
+  lines.push("Fuel cap: " + fmt1(cap) + " L");
+  lines.push("Fixed items configured: " + (Array.isArray(DEFAULT_CONFIG.fixed_items) && DEFAULT_CONFIG.fixed_items.length ? DEFAULT_CONFIG.fixed_items.length : 0));
+  if (Array.isArray(DEFAULT_CONFIG.fixed_items) && DEFAULT_CONFIG.fixed_items.length) {
+    lines.push("Fixed items totals: " + fmt3(fx.tw) + " kg, " + fmt3(fx.tm) + " kg*m");
+  }
+  el("fixedItemsInfo").textContent = lines.join(" | ");
+}
+
+function updateMoreCount() {
+  el("moreCount").textContent = "More items: " + state.moreItems.length;
+}
+
+function updateAll() {
+  updateHighlights();
+  updateBanner();
+  updateFixedInfo();
+
+  // Keep empty-from-wheels summary live if wheel fields are filled
+  const n = String(el("noseLoad").value || "").trim();
+  const l = String(el("leftLoad").value || "").trim();
+  const r = String(el("rightLoad").value || "").trim();
+  if (n && l && r) computeEmptyFromWheels(false);
+  else el("emptyFromWheelsSummary").textContent = "";
+
+  const bundle = computeLoaded(false);
+  el("results").textContent = buildResultsText(bundle);
+
+  // chart redraw
+  drawCharts(bundle);
+
+  saveState();
+}
+
+function drawCharts(bundle) {
+  // On-screen chart only
+  const show = el("chartCard").style.display !== "none";
+  if (show) drawChartToCanvas(el("chart"), bundle);
+}
+
+function drawChartToCanvas(canvas, bundle) {
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const mtow = getMtow();
+  const [lo, hi] = getLimits();
+
+  const empty = bundle && bundle.empty ? bundle.empty : null;
+  const loaded = bundle && bundle.loaded ? bundle.loaded : null;
+
+  // Determine ranges
+  const xPad = 0.05;
+  const xMin = Math.min(lo, hi) - xPad;
+  const xMax = Math.max(lo, hi) + xPad;
+
+  let yMax = mtow;
+  if (empty) yMax = Math.max(yMax, empty.weight_kg);
+  if (loaded) yMax = Math.max(yMax, loaded.weight_kg);
+  yMax = yMax * 1.10;
+  if (yMax < 10) yMax = 10;
+
+  // Layout
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  // background
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,W,H);
+
+  const marginL = 60;
+  const marginR = 20;
+  const marginT = 30;
+  const marginB = 50;
+
+  const plotW = W - marginL - marginR;
+  const plotH = H - marginT - marginB;
+
+  function xToPx(x) {
+    return marginL + (x - xMin) * plotW / (xMax - xMin);
+  }
+  function yToPx(y) {
+    return marginT + (yMax - y) * plotH / (yMax);
+  }
+
+  // grid
+  ctx.strokeStyle = "#d0d0d0";
+  ctx.lineWidth = 1;
+
+  for (let i=0;i<=10;i++) {
+    const y = (yMax * i / 10);
+    const py = yToPx(y);
+    ctx.beginPath();
+    ctx.moveTo(marginL, py);
+    ctx.lineTo(marginL+plotW, py);
+    ctx.stroke();
+  }
+
+  for (let i=0;i<=10;i++) {
+    const x = xMin + (xMax-xMin) * i / 10;
+    const px = xToPx(x);
+    ctx.beginPath();
+    ctx.moveTo(px, marginT);
+    ctx.lineTo(px, marginT+plotH);
+    ctx.stroke();
+  }
+
+  // envelope fill
+  ctx.fillStyle = "rgba(37,99,235,0.12)";
+  const x1 = xToPx(lo);
+  const x2 = xToPx(hi);
+  ctx.fillRect(Math.min(x1,x2), marginT, Math.abs(x2-x1), plotH);
+
+  // axes
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(marginL, marginT);
+  ctx.lineTo(marginL, marginT+plotH);
+  ctx.lineTo(marginL+plotW, marginT+plotH);
+  ctx.stroke();
+
+  // limit lines
+  ctx.setLineDash([6,4]);
+  ctx.strokeStyle = "#000000";
+  ctx.beginPath();
+  ctx.moveTo(xToPx(lo), marginT);
+  ctx.lineTo(xToPx(lo), marginT+plotH);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(xToPx(hi), marginT);
+  ctx.lineTo(xToPx(hi), marginT+plotH);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(marginL, yToPx(mtow));
+  ctx.lineTo(marginL+plotW, yToPx(mtow));
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // labels
+  ctx.fillStyle = "#000000";
+  ctx.font = "12px Arial";
+  ctx.fillText("CG (m FoD)", Math.floor(marginL + plotW/2 - 35), H-18);
+  ctx.save();
+  ctx.translate(18, Math.floor(marginT + plotH/2 + 35));
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText("Weight (kg)", 0, 0);
+  ctx.restore();
+
+  ctx.font = "11px Arial";
+  ctx.fillText("lo " + fmt3(lo), xToPx(lo) + 4, marginT + 12);
+  ctx.fillText("hi " + fmt3(hi), xToPx(hi) + 4, marginT + 24);
+  ctx.fillText("MTOW " + fmt1(mtow), marginL + 4, yToPx(mtow) - 6);
+
+  // tick labels
+  ctx.fillStyle = "#000000";
+  ctx.font = "10px Arial";
+  for (let i=0;i<=5;i++) {
+    const y = yMax * i / 5;
+    const py = yToPx(y);
+    ctx.fillText(fmt0(y), 8, py+3);
+  }
+  for (let i=0;i<=5;i++) {
+    const x = xMin + (xMax-xMin) * i / 5;
+    const px = xToPx(x);
+    ctx.fillText(fmt3(x), px-12, H-34);
+  }
+
+  function plotPoint(pt, label) {
+    const px = xToPx(pt.cg_m);
+    const py = yToPx(pt.weight_kg);
+    ctx.fillStyle = "#111827";
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "#000000";
+    ctx.font = "12px Arial";
+    ctx.fillText(label, px + 8, py - 8);
+    ctx.font = "11px Arial";
+    ctx.fillText("W " + fmt1(pt.weight_kg) + "  CG " + fmt3(pt.cg_m), px + 8, py + 8);
+  }
+
+  if (empty) plotPoint(empty, "EMPTY");
+  if (loaded) plotPoint(loaded, "LOADED");
+
+  // title
+  ctx.fillStyle = "#000000";
+  ctx.font = "14px Arial";
+  ctx.fillText("W&B chart (updated " + (new Date()).toLocaleTimeString() + ")", marginL, 20);
+}
+
+function toggleChart() {
+  const card = el("chartCard");
+  if (card.style.display === "none") {
+    card.style.display = "block";
+    el("btnToggleChart").textContent = "Hide W&B chart";
+  } else {
+    card.style.display = "none";
+    el("btnToggleChart").textContent = "Show W&B chart";
+  }
+  updateAll();
+}
+
+function resetLimits() {
+  el("mtow").value = DEFAULT_CONFIG.mtow_kg;
+  el("cgAft").value = DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit;
+  el("cgFwd").value = DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit;
+  updateAll();
+}
+
+function openMoreModal() {
+  el("modalBackdrop").style.display = "block";
+  el("moreModal").style.display = "block";
+  buildMoreTable();
+}
+
+function closeMoreModal() {
+  el("modalBackdrop").style.display = "none";
+  el("moreModal").style.display = "none";
+}
+
+function openHelp() {
+  el("modalBackdrop").style.display = "block";
+  el("helpModal").style.display = "block";
+  el("helpText").textContent = buildHelpText();
+}
+
+function closeHelp() {
+  el("modalBackdrop").style.display = "none";
+  el("helpModal").style.display = "none";
+}
+
+function buildMoreTable() {
+  const host = el("moreTable");
+  host.innerHTML = "";
+
+  function addCell(node) {
+    host.appendChild(node);
+  }
+
+  const h1 = document.createElement("div"); h1.className = "h"; h1.textContent = "Name";
+  const h2 = document.createElement("div"); h2.className = "h"; h2.textContent = "Weight (kg)";
+  const h3 = document.createElement("div"); h3.className = "h"; h3.textContent = "Arm (m)";
+  const h4 = document.createElement("div"); h4.className = "h"; h4.textContent = "";
+  addCell(h1); addCell(h2); addCell(h3); addCell(h4);
+
+  for (let i=0;i<state.moreItems.length;i++) {
+    const it = state.moreItems[i];
+
+    const name = document.createElement("input");
+    name.type = "text";
+    name.maxLength = 80;
+    name.value = it.name || "";
+    name.addEventListener("input", () => it.name = name.value);
+
+    const wt = document.createElement("input");
+    wt.type = "number";
+    wt.step = "0.1";
+    wt.value = (it.weight !== undefined) ? it.weight : "";
+    wt.addEventListener("input", () => it.weight = wt.value);
+
+    const arm = document.createElement("input");
+    arm.type = "number";
+    arm.step = "0.001";
+    arm.value = (it.arm !== undefined) ? it.arm : "";
+    arm.addEventListener("input", () => it.arm = arm.value);
+
+    const del = document.createElement("button");
+    del.className = "btn secondary";
+    del.textContent = "Remove";
+    del.addEventListener("click", () => {
+      state.moreItems.splice(i,1);
+      buildMoreTable();
+      updateMoreCount();
+    });
+
+    addCell(name); addCell(wt); addCell(arm); addCell(del);
+  }
+}
+
+function addMoreRow() {
+  state.moreItems.push({ name: "", weight: "", arm: "" });
+  buildMoreTable();
+  updateMoreCount();
+}
+
+function moreOK() {
+  // Normalize to numbers where possible; keep strings if empty
+  const cleaned = [];
+  for (const it of state.moreItems) {
+    const name = String(it.name || "").trim();
+    if (!name) continue;
+    const w = Number(String(it.weight || "").trim());
+    const arm = Number(String(it.arm || "").trim());
+    if (!isFinite(w) || !isFinite(arm) || Math.abs(w) < 1e-12) continue;
+    cleaned.push({ name: name, weight: w, arm: arm });
+  }
+  state.moreItems = cleaned;
+  updateMoreCount();
+  closeMoreModal();
+  updateAll();
+}
+
+function clearExtras() {
+  el("exName1").value = ""; el("exWt1").value = ""; el("exArm1").value = "";
+  el("exName2").value = ""; el("exWt2").value = ""; el("exArm2").value = "";
+  el("exName3").value = ""; el("exWt3").value = ""; el("exArm3").value = "";
+  state.moreItems = [];
+  updateMoreCount();
+  updateAll();
+}
+
+function buildHelpText() {
+  const [lo, hi] = getLimits();
+  const mtow = getMtow();
+  const cap = getFuelCap();
+  const dens = Number(DEFAULT_CONFIG.fuel.density_kg_per_l);
+
+  const lines = [];
+  lines.push("W&B for Ultralight Version 2.01 (Web) - Help");
+  lines.push("");
+  lines.push("How to use (typical):");
+  lines.push("  1) Enter wheel loads and compute EMPTY.");
+  lines.push("  2) Copy computed EMPTY to baseline fields (recommended).");
+  lines.push("  3) Enter pilot/pax/fuel/baggage and compute LOADED.");
+  lines.push("  4) Use Print/Export to save as PDF.");
+  lines.push("");
+  lines.push("Sign convention:");
+  lines.push("  Datum is main wheel axles (arm 0).");
+  lines.push("  FoD (forward of datum) is positive. AoD (aft of datum) is negative.");
+  lines.push("");
+  lines.push("Editable top fields:");
+  lines.push("  Aircraft Registration prints in bold at top center in the printed/PDF loadsheet.");
+  lines.push("  Fuel Capacity can be changed. Yellow if not 73 L.");
+  lines.push("  MTOW and CG limits can be changed to use this for another aircraft.");
+  lines.push("");
+  lines.push("Current settings:");
+  lines.push("  MTOW: " + fmt1(mtow) + " kg");
+  lines.push("  CG limits: " + fmt3(lo) + " .. " + fmt3(hi) + " m FoD");
+  lines.push("  Fuel density: " + fmt3(dens) + " kg/L");
+  lines.push("  Fuel capacity: " + fmt1(cap) + " L");
+  lines.push("");
+  lines.push("Saved values:");
+  lines.push("  This web app remembers your last values using browser local storage.");
+  lines.push("");
+  lines.push("PDF:");
+  lines.push("  Use Print/Export Loadsheet (PDF). On iPad choose Print then Save as PDF (or Share).");
+  return lines.join("
+");
+}
+
+
+function doPrint() {
+  // Build a one-page loadsheet in a new window and print it.
+  const bundle = computeLoaded(false);
+
+  const reg = String(el("reg").value || "").trim().toUpperCase();
+  const title = "Loadsheet - W&B for Ultralight";
+  const text = buildResultsText(bundle);
+
+  // Offscreen chart image
+  const off = document.createElement("canvas");
+  off.width = 900;
+  off.height = 650;
+  drawChartToCanvas(off, bundle);
+  const imgData = off.toDataURL("image/png");
+
+  const w = window.open("", "_blank");
+  if (!w) {
+    alert("Popup blocked. Please allow popups to print.");
+    return;
+  }
+
+  const css = `
+    body { font-family: Arial, sans-serif; margin: 14mm; color: #000; }
+    .reg { text-align: center; font-weight: 800; font-size: 18px; margin-bottom: 4mm; }
+    .title { font-weight: 800; font-size: 14px; margin-bottom: 2mm; }
+    .meta { font-size: 11px; margin-bottom: 4mm; }
+    pre { white-space: pre-wrap; border: 1px solid #999; padding: 8px; font-size: 10px; }
+    img { width: 100%; border: 1px solid #999; margin-top: 6mm; }
+  `;
+
+  const html = `
+    <!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>${title}</title>
+      <style>${css}</style>
+    </head>
+    <body>
+      <div class="reg">${reg ? reg : ""}</div>
+      <div class="title">Loadsheet</div>
+      <div class="meta">${DEFAULT_CONFIG.aircraft_name} | ${nowStamp()}</div>
+      <pre>${escapeHtml(text)}</pre>
+      <img src="${imgData}" alt="W&B chart">
+      <script>
+        window.onload = function() {
+          setTimeout(function(){ window.print(); }, 150);
+        };
+      </script>
+    </body>
+    </html>
+  `;
+
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+  setTimeout(() => { window.print(); }, 50);
+  // iOS Safari sometimes does not fire afterprint reliably, so also remove after a delay.
+  setTimeout(() => { try { document.body.classList.remove("printing"); } catch (e) {} }, 2000);
+}
+
+function setup() {
+  // initial state
+  const st = loadState();
+  applyState(st);
+
+  // Buttons
+  el("btnEmptyFromWheels").addEventListener("click", () => { computeEmptyFromWheels(true); updateAll(); });
+  el("btnCopyEmpty").addEventListener("click", () => { copyComputedEmpty(); });
+  el("btnComputeLoaded").addEventListener("click", () => { const b = computeLoaded(true); if (b) updateAll(); });
+  el("btnToggleChart").addEventListener("click", toggleChart);
+  el("resetLimits").addEventListener("click", resetLimits);
+  el("btnMoreItems").addEventListener("click", openMoreModal);
+  el("btnClearExtras").addEventListener("click", clearExtras);
+
+  el("btnAddMoreRow").addEventListener("click", addMoreRow);
+  el("btnMoreOK").addEventListener("click", moreOK);
+  el("btnCloseMore").addEventListener("click", closeMoreModal);
+
+  el("btnHelp").addEventListener("click", openHelp);
+  el("btnCloseHelp").addEventListener("click", closeHelp);
+
+  el("modalBackdrop").addEventListener("click", () => {
+    closeMoreModal();
+    closeHelp();
+  });
+
+  el("btnPrint").addEventListener("click", doPrint);
+
+  // Input listeners
+  const ids = [
+    "reg","fuelCap","mtow","cgAft","cgFwd",
+    "noseLoad","leftLoad","rightLoad",
+    "emptyWt","emptyMoment",
+    "pilotKg","paxKg","fuelL","baggageKg",
+    "pilotSeat","paxSeat",
+    "exName1","exWt1","exArm1",
+    "exName2","exWt2","exArm2",
+    "exName3","exWt3","exArm3",
+    "includeFixed"
+  ];
+  for (const id of ids) {
+    const node = el(id);
+    const ev = (node.tagName === "SELECT" || node.type === "checkbox") ? "change" : "input";
+    node.addEventListener(ev, () => updateAll());
+    if (ev === "change") node.addEventListener("input", () => updateAll());
+  }
+
+  // Print hook
+  
+
+  // Initial compute + chart
+  el("btnToggleChart").textContent = "Show W&B chart";
+  updateAll();
+}
+
+setup();
+
+  </script>
+</body>
+</html>
