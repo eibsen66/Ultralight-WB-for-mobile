@@ -1,79 +1,147 @@
-/* PWA offline */
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  });
+/* ASCII-only JS */
+"use strict";
+
+const APP_TITLE = "W&B for Ultralight Version 2.02 by Egill Ibsen";
+const ADD_AIRCRAFT_OPTION = "Add Aircraft type...";
+const CUSTOM_TYPES_KEY = "wb_ultralight_custom_aircraft_types_v2_02";
+const DISCLAIMER_SHORT = "DISCLAIMER: Use at your own risk. Verify results against approved aircraft documentation.";
+
+function loadCustomAircraftTypes() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_TYPES_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    const out = [];
+    const seen = {};
+    for (const x of arr) {
+      let s = String(x || "").trim();
+      if (!s) continue;
+      // ASCII only
+      s = s.replace(/[^ -~]/g, "");
+      s = s.trim();
+      if (!s) continue;
+      if (s === ADD_AIRCRAFT_OPTION) continue;
+      if (s.length > 40) s = s.slice(0, 40).trim();
+      const key = s.toLowerCase();
+      if (seen[key]) continue;
+      seen[key] = true;
+      out.push(s);
+    }
+    return out;
+  } catch (e) {
+    return [];
+  }
 }
 
-/* ASCII-only JS */
+function saveCustomAircraftTypes(list) {
+  try {
+    localStorage.setItem(CUSTOM_TYPES_KEY, JSON.stringify(list || []));
+  } catch (e) {
+    // ignore
+  }
+}
 
-const DEFAULT_CONFIG = {
-  "aircraft_name": "SkyRanger Nynja LS 600",
-  "units": {
-    "weight": "kg",
-    "arm": "m"
-  },
-  "mtow_kg": 600.0,
-  "datum_description": "Main wheel axle center (FoD positive, AoD negative)",
-  "cg_limits_m_forward_of_datum": {
-    "aft_limit": 0.21,
-    "forward_limit": 0.38
-  },
-  "arms_m": {
-    "nose_wheel": 1.45,
-    "left_main_wheel": 0.0,
-    "right_main_wheel": 0.0,
-    "pilot_seat": {
-      "aft_most": 0.15,
-      "fwd_most": 0.15
-    },
-    "passenger_seat": {
-      "aft_most": 0.15,
-      "fwd_most": 0.15
-    },
-    "fuel": -0.29,
-    "baggage": -0.29
-  },
-  "limits": {
-    "seat_min_kg": 55.0,
-    "seat_max_kg": 120.0,
-    "total_seat_min_kg": 172.0,
-    "baggage_max_kg": 10.0
-  },
-  "fuel": {
-    "capacity_l": 73.0,
-    "density_kg_per_l": 0.7
-  },
-  "index": {
-    "moment_index_divisor": 1.0
-  },
-  "fixed_items": [
-    {
-      "name": "Aluminium fuel tank (empty) 7.5 kg (include only if not already in baseline)",
-      "weight_kg": 7.5,
-      "arm_m": -0.29
+function addAircraftTypePrompt() {
+  const name0 = prompt("Enter aircraft type name (ASCII only):", "");
+  if (name0 === null) return null;
+  let name = String(name0 || "").trim();
+  name = name.replace(/[^ -~]/g, "").trim();
+  if (!name) return null;
+  if (name.length > 40) name = name.slice(0, 40).trim();
+  const builtIn = Object.keys(AIRCRAFT_PROFILES);
+  const lower = (s) => String(s || "").toLowerCase();
+  const allLower = {};
+  for (const b of builtIn) allLower[lower(b)] = true;
+  for (const c of loadCustomAircraftTypes()) allLower[lower(c)] = true;
+  if (allLower[lower(name)]) return name; // already exists
+  const custom = loadCustomAircraftTypes();
+  custom.push(name);
+  saveCustomAircraftTypes(custom);
+  return name;
+}
+
+
+const AIRCRAFT_PROFILES = {
+  "Skyranger Nynja 600": {
+    "preset": true,
+    "config": {
+      "aircraft_name": "SkyRanger Nynja LS 600",
+      "units": {
+        "weight": "kg",
+        "arm": "m"
+      },
+      "mtow_kg": 600.0,
+      "datum_description": "Main wheel axle center (FoD positive, AoD negative)",
+      "cg_limits_m_forward_of_datum": {
+        "aft_limit": 0.21,
+        "forward_limit": 0.38
+      },
+      "arms_m": {
+        "nose_wheel": 1.45,
+        "left_main_wheel": 0.0,
+        "right_main_wheel": 0.0,
+        "pilot_seat": {
+          "aft_most": 0.15,
+          "fwd_most": 0.15
+        },
+        "passenger_seat": {
+          "aft_most": 0.15,
+          "fwd_most": 0.15
+        },
+        "fuel": -0.29,
+        "baggage": -0.29
+      },
+      "limits": {
+        "seat_min_kg": 55.0,
+        "seat_max_kg": 120.0,
+        "total_seat_min_kg": 172.0,
+        "baggage_max_kg": 10.0
+      },
+      "fuel": {
+        "capacity_l": 73.0,
+        "density_kg_per_l": 0.7
+      },
+      "index": {
+        "moment_index_divisor": 1.0
+      },
+      "fixed_items": [
+        {
+          "name": "Aluminium fuel tank (empty) 7.5 kg (include only if not already in baseline)",
+          "weight_kg": 7.5,
+          "arm_m": -0.29
+        }
+      ]
     }
-  ]
+  },
+  "ICP Savannah": {
+    "preset": false
+  },
+  "Zenith 701": {
+    "preset": false
+  },
+  "Zenith 750": {
+    "preset": false
+  }
 };
 
-const STORAGE_KEY = "wb_ultralight_state_v2_01_web";
+const STORAGE_KEY = "wb_ultralight_state_v2_02_web";
 
 function el(id) {
   return document.getElementById(id);
 }
 
-function fmt2(x) {
-  if (!isFinite(x)) return "nan";
-  return x.toFixed(2);
-}
-function fmt3(x) {
-  if (!isFinite(x)) return "nan";
-  return x.toFixed(3);
+function deepCopy(obj) {
+  return JSON.parse(JSON.stringify(obj));
 }
 
-function safeNum(v, defVal=0) {
-  if (v === null || v === undefined) return defVal;
-  const s = String(v).trim();
+function fmt0(x) { if (!isFinite(x)) return "nan"; return String(Math.round(x)); }
+function fmt1(x) { if (!isFinite(x)) return "nan"; return x.toFixed(1); }
+function fmt2(x) { if (!isFinite(x)) return "nan"; return x.toFixed(2); }
+function fmt3(x) { if (!isFinite(x)) return "nan"; return x.toFixed(3); }
+
+function safeNum(v, defVal=null) {
+  const s = String(v === undefined || v === null ? "" : v).trim();
   if (!s) return defVal;
   const n = Number(s);
   if (!isFinite(n)) throw new Error("Invalid number: " + s);
@@ -82,8 +150,7 @@ function safeNum(v, defVal=0) {
 
 function clampText(v, maxLen) {
   const s = String(v || "").trim();
-  if (s.length <= maxLen) return s;
-  return s.slice(0, maxLen);
+  return s.length <= maxLen ? s : s.slice(0, maxLen);
 }
 
 function nowStamp() {
@@ -96,45 +163,68 @@ function nowStamp() {
   return y + "-" + m + "-" + da + " " + hh + ":" + mm;
 }
 
+function escapeHtml(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const state = {
-  moreItems: []
+  moreItems: [],
+  lastEmptyComputed: null,
+  currentPresetName: "Skyranger Nynja 600"
 };
 
-function defaults() {
+function defaultState() {
   return {
+    acType: "Skyranger Nynja 600",
     reg: "",
-    fuelCap: DEFAULT_CONFIG.fuel.capacity_l,
-    mtow: DEFAULT_CONFIG.mtow_kg,
-    cgAft: DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit,
-    cgFwd: DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit,
-
+    // Top fields
+    fuelCap: "",
+    mtow: "",
+    cgAft: "",
+    cgFwd: "",
+    // Aircraft data
+    armNose: "",
+    armMainL: "",
+    armMainR: "",
+    idxDiv: "",
+    armPilot: "",
+    armPax: "",
+    armFuel: "",
+    armBag: "",
+    fuelDens: "",
+    seatMin: "",
+    seatMax: "",
+    seatTotalMin: "",
+    bagMax: "",
+    // Baseline
     noseLoad: "",
     leftLoad: "",
     rightLoad: "",
-
     emptyWt: "",
     emptyMoment: "",
-
     includeFixed: false,
-
+    // Loading
     pilotKg: "",
     paxKg: "",
     fuelL: "",
     baggageKg: "",
-
     pilotSeat: "aft",
     paxSeat: "aft",
-
+    // Extras
     exName1: "", exWt1: "", exArm1: "",
     exName2: "", exWt2: "", exArm2: "",
     exName3: "", exWt3: "", exArm3: "",
-
     moreItems: []
   };
 }
 
 function loadState() {
-  const d = defaults();
+  const d = defaultState();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return d;
@@ -146,9 +236,8 @@ function loadState() {
 }
 
 function saveState() {
-  const obj = collectState();
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState()));
   } catch (e) {
     // ignore
   }
@@ -156,26 +245,38 @@ function saveState() {
 
 function collectState() {
   return {
+    acType: el("acType").value,
     reg: clampText(el("reg").value, 20),
     fuelCap: el("fuelCap").value,
     mtow: el("mtow").value,
     cgAft: el("cgAft").value,
     cgFwd: el("cgFwd").value,
 
+    armNose: el("armNose").value,
+    armMainL: el("armMainL").value,
+    armMainR: el("armMainR").value,
+    idxDiv: el("idxDiv").value,
+    armPilot: el("armPilot").value,
+    armPax: el("armPax").value,
+    armFuel: el("armFuel").value,
+    armBag: el("armBag").value,
+    fuelDens: el("fuelDens").value,
+    seatMin: el("seatMin").value,
+    seatMax: el("seatMax").value,
+    seatTotalMin: el("seatTotalMin").value,
+    bagMax: el("bagMax").value,
+
     noseLoad: el("noseLoad").value,
     leftLoad: el("leftLoad").value,
     rightLoad: el("rightLoad").value,
-
     emptyWt: el("emptyWt").value,
     emptyMoment: el("emptyMoment").value,
-
     includeFixed: el("includeFixed").checked,
 
     pilotKg: el("pilotKg").value,
     paxKg: el("paxKg").value,
     fuelL: el("fuelL").value,
     baggageKg: el("baggageKg").value,
-
     pilotSeat: el("pilotSeat").value,
     paxSeat: el("paxSeat").value,
 
@@ -187,88 +288,243 @@ function collectState() {
   };
 }
 
-function applyState(obj) {
-  el("reg").value = obj.reg || "";
-  el("fuelCap").value = obj.fuelCap !== undefined ? obj.fuelCap : DEFAULT_CONFIG.fuel.capacity_l;
-  el("mtow").value = obj.mtow !== undefined ? obj.mtow : DEFAULT_CONFIG.mtow_kg;
-  el("cgAft").value = obj.cgAft !== undefined ? obj.cgAft : DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit;
-  el("cgFwd").value = obj.cgFwd !== undefined ? obj.cgFwd : DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit;
+function setWarn(node, isWarn) {
+  if (!node) return;
+  if (isWarn) node.classList.add("warn");
+  else node.classList.remove("warn");
+}
 
-  el("noseLoad").value = obj.noseLoad || "";
-  el("leftLoad").value = obj.leftLoad || "";
-  el("rightLoad").value = obj.rightLoad || "";
+function populateAircraftDropdown() {
+  const sel = el("acType");
+  const prev = String(sel.value || "");
+  sel.innerHTML = "";
 
-  el("emptyWt").value = obj.emptyWt || "";
-  el("emptyMoment").value = obj.emptyMoment || "";
+  // Keep a stable order for built-in types
+  const built = ["Skyranger Nynja 600", "ICP Savannah", "Zenith 701", "Zenith 750"];
+  for (const name of built) {
+    if (!AIRCRAFT_PROFILES[name]) continue;
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  }
 
-  el("includeFixed").checked = !!obj.includeFixed;
+  // Add custom types after built-ins
+  for (const name of loadCustomAircraftTypes()) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  }
 
-  el("pilotKg").value = obj.pilotKg || "";
-  el("paxKg").value = obj.paxKg || "";
-  el("fuelL").value = obj.fuelL || "";
-  el("baggageKg").value = obj.baggageKg || "";
+  // Add the special entry at the end
+  const optAdd = document.createElement("option");
+  optAdd.value = ADD_AIRCRAFT_OPTION;
+  optAdd.textContent = ADD_AIRCRAFT_OPTION;
+  sel.appendChild(optAdd);
 
-  el("pilotSeat").value = obj.pilotSeat || "aft";
-  el("paxSeat").value = obj.paxSeat || "aft";
+  // Restore selection if possible
+  if (prev) {
+    const ok = Array.from(sel.options).some(o => o.value === prev);
+    if (ok) sel.value = prev;
+  }
+}
 
-  el("exName1").value = obj.exName1 || ""; el("exWt1").value = obj.exWt1 || ""; el("exArm1").value = obj.exArm1 || "";
-  el("exName2").value = obj.exName2 || ""; el("exWt2").value = obj.exWt2 || ""; el("exArm2").value = obj.exArm2 || "";
-  el("exName3").value = obj.exName3 || ""; el("exWt3").value = obj.exWt3 || ""; el("exArm3").value = obj.exArm3 || "";
 
-  state.moreItems = Array.isArray(obj.moreItems) ? obj.moreItems : [];
+function applyState(st) {
+  el("acType").value = st.acType || "Skyranger Nynja 600";
+  el("reg").value = st.reg || "";
+
+  el("fuelCap").value = st.fuelCap || "";
+  el("mtow").value = st.mtow || "";
+  el("cgAft").value = st.cgAft || "";
+  el("cgFwd").value = st.cgFwd || "";
+
+  el("armNose").value = st.armNose || "";
+  el("armMainL").value = st.armMainL || "";
+  el("armMainR").value = st.armMainR || "";
+  el("idxDiv").value = st.idxDiv || "";
+  el("armPilot").value = st.armPilot || "";
+  el("armPax").value = st.armPax || "";
+  el("armFuel").value = st.armFuel || "";
+  el("armBag").value = st.armBag || "";
+  el("fuelDens").value = st.fuelDens || "";
+  el("seatMin").value = st.seatMin || "";
+  el("seatMax").value = st.seatMax || "";
+  el("seatTotalMin").value = st.seatTotalMin || "";
+  el("bagMax").value = st.bagMax || "";
+
+  el("noseLoad").value = st.noseLoad || "";
+  el("leftLoad").value = st.leftLoad || "";
+  el("rightLoad").value = st.rightLoad || "";
+  el("emptyWt").value = st.emptyWt || "";
+  el("emptyMoment").value = st.emptyMoment || "";
+  el("includeFixed").checked = !!st.includeFixed;
+
+  el("pilotKg").value = st.pilotKg || "";
+  el("paxKg").value = st.paxKg || "";
+  el("fuelL").value = st.fuelL || "";
+  el("baggageKg").value = st.baggageKg || "";
+  el("pilotSeat").value = st.pilotSeat || "aft";
+  el("paxSeat").value = st.paxSeat || "aft";
+
+  el("exName1").value = st.exName1 || ""; el("exWt1").value = st.exWt1 || ""; el("exArm1").value = st.exArm1 || "";
+  el("exName2").value = st.exName2 || ""; el("exWt2").value = st.exWt2 || ""; el("exArm2").value = st.exArm2 || "";
+  el("exName3").value = st.exName3 || ""; el("exWt3").value = st.exWt3 || ""; el("exArm3").value = st.exArm3 || "";
+
+  state.moreItems = Array.isArray(st.moreItems) ? st.moreItems : [];
   updateMoreCount();
 }
 
-function getMtow() {
-  const s = String(el("mtow").value || "").trim();
-  const v0 = Number(DEFAULT_CONFIG.mtow_kg);
-  if (!s) return v0;
-  const v = Number(s);
-  if (!isFinite(v) || v <= 0) return v0;
-  return v;
-}
+function fillFromPreset(presetName) {
+  const prof = AIRCRAFT_PROFILES[presetName];
+  const isPreset = !!(prof && prof.preset && prof.config);
+  state.currentPresetName = presetName;
 
-function getLimits() {
-  const a0 = Number(DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit);
-  const f0 = Number(DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit);
-
-  const aS = String(el("cgAft").value || "").trim();
-  const fS = String(el("cgFwd").value || "").trim();
-
-  const a = aS ? Number(aS) : a0;
-  const f = fS ? Number(fS) : f0;
-
-  const lo = Math.min(a, f);
-  const hi = Math.max(a, f);
-  return [lo, hi];
-}
-
-function getFuelCap() {
-  const v0 = Number(DEFAULT_CONFIG.fuel.capacity_l);
-  const s = String(el("fuelCap").value || "").trim();
-  if (!s) return v0;
-  const v = Number(s);
-  if (!isFinite(v) || v <= 0) return v0;
-  return v;
-}
-
-function getSeatArm(who, pos) {
-  const arms = DEFAULT_CONFIG.arms_m;
-  const seat = (who === "pilot") ? arms.pilot_seat : arms.passenger_seat;
-  // This aircraft has same for fwd/aft, but keep logic.
-  if (pos === "fwd") {
-    return Number(seat.fwd_most);
+  if (!isPreset) {
+    // Clear all aircraft fields for manual entry
+    el("fuelCap").value = "";
+    el("mtow").value = "";
+    el("cgAft").value = "";
+    el("cgFwd").value = "";
+    el("armNose").value = "";
+    el("armMainL").value = "";
+    el("armMainR").value = "";
+    el("idxDiv").value = "";
+    el("armPilot").value = "";
+    el("armPax").value = "";
+    el("armFuel").value = "";
+    el("armBag").value = "";
+    el("fuelDens").value = "";
+    el("seatMin").value = "";
+    el("seatMax").value = "";
+    el("seatTotalMin").value = "";
+    el("bagMax").value = "";
+    el("includeFixed").checked = false;
+    updateAll();
+    return;
   }
-  return Number(seat.aft_most);
+
+  const cfg = deepCopy(prof.config);
+
+  el("fuelCap").value = String(cfg.fuel.capacity_l);
+  el("mtow").value = String(cfg.mtow_kg);
+  el("cgAft").value = String(cfg.cg_limits_m_forward_of_datum.aft_limit);
+  el("cgFwd").value = String(cfg.cg_limits_m_forward_of_datum.forward_limit);
+
+  el("armNose").value = String(cfg.arms_m.nose_wheel);
+  el("armMainL").value = String(cfg.arms_m.left_main_wheel);
+  el("armMainR").value = String(cfg.arms_m.right_main_wheel);
+  el("idxDiv").value = String(cfg.index.moment_index_divisor);
+
+  el("armPilot").value = String(cfg.arms_m.pilot_seat.aft_most);
+  el("armPax").value = String(cfg.arms_m.passenger_seat.aft_most);
+  el("armFuel").value = String(cfg.arms_m.fuel);
+  el("armBag").value = String(cfg.arms_m.baggage);
+
+  el("fuelDens").value = String(cfg.fuel.density_kg_per_l);
+  el("seatMin").value = String(cfg.limits.seat_min_kg);
+  el("seatMax").value = String(cfg.limits.seat_max_kg);
+  el("seatTotalMin").value = String(cfg.limits.total_seat_min_kg);
+  el("bagMax").value = String(cfg.limits.baggage_max_kg);
+
+  updateAll();
 }
 
-function getIndexDivisor() {
-  const d = Number(DEFAULT_CONFIG.index.moment_index_divisor);
+function getConfigFromInputs() {
+  // If the selected aircraft has a preset, it is used as "defaults" for warnings,
+  // but computations always use the current input values.
+  const acName = el("acType").value || "Custom";
+
+  const mtow = safeNum(el("mtow").value, null);
+  const aft = safeNum(el("cgAft").value, null);
+  const fwd = safeNum(el("cgFwd").value, null);
+  const fuelCap = safeNum(el("fuelCap").value, null);
+
+  const armNose = safeNum(el("armNose").value, null);
+  const armMainL = safeNum(el("armMainL").value, null);
+  const armMainR = safeNum(el("armMainR").value, null);
+  const idxDiv = safeNum(el("idxDiv").value, null);
+
+  const armPilot = safeNum(el("armPilot").value, null);
+  const armPax = safeNum(el("armPax").value, null);
+  const armFuel = safeNum(el("armFuel").value, null);
+  const armBag = safeNum(el("armBag").value, null);
+
+  const fuelDens = safeNum(el("fuelDens").value, null);
+
+  const seatMin = safeNum(el("seatMin").value, null);
+  const seatMax = safeNum(el("seatMax").value, null);
+  const seatTotalMin = safeNum(el("seatTotalMin").value, null);
+  const bagMax = safeNum(el("bagMax").value, null);
+
+  return {
+    aircraft_name: acName,
+    datum_description: "Main wheel axle center (FoD positive, AoD negative)",
+    mtow_kg: mtow,
+    cg_limits_m_forward_of_datum: { aft_limit: aft, forward_limit: fwd },
+    arms_m: {
+      nose_wheel: armNose,
+      left_main_wheel: armMainL,
+      right_main_wheel: armMainR,
+      pilot_seat: { aft_most: armPilot, fwd_most: armPilot },
+      passenger_seat: { aft_most: armPax, fwd_most: armPax },
+      fuel: armFuel,
+      baggage: armBag
+    },
+    fuel: { capacity_l: fuelCap, density_kg_per_l: fuelDens },
+    limits: {
+      seat_min_kg: seatMin,
+      seat_max_kg: seatMax,
+      total_seat_min_kg: seatTotalMin,
+      baggage_max_kg: bagMax
+    },
+    index: { moment_index_divisor: idxDiv },
+    fixed_items: (AIRCRAFT_PROFILES["Skyranger Nynja 600"] && acName === "Skyranger Nynja 600") ? deepCopy(AIRCRAFT_PROFILES["Skyranger Nynja 600"].config.fixed_items) : []
+  };
+}
+
+function validateConfig(cfg) {
+  const missing = [];
+  function req(val, name) {
+    if (val === null || val === undefined || !isFinite(val)) missing.push(name);
+  }
+  req(cfg.mtow_kg, "MTOW");
+  req(cfg.cg_limits_m_forward_of_datum.aft_limit, "CG aft limit");
+  req(cfg.cg_limits_m_forward_of_datum.forward_limit, "CG fwd limit");
+  req(cfg.fuel.capacity_l, "Fuel capacity");
+  req(cfg.fuel.density_kg_per_l, "Fuel density");
+  req(cfg.index.moment_index_divisor, "Moment index divisor");
+
+  req(cfg.arms_m.nose_wheel, "Nose wheel arm");
+  req(cfg.arms_m.left_main_wheel, "Left main arm");
+  req(cfg.arms_m.right_main_wheel, "Right main arm");
+  req(cfg.arms_m.pilot_seat.aft_most, "Pilot seat arm");
+  req(cfg.arms_m.passenger_seat.aft_most, "Passenger seat arm");
+  req(cfg.arms_m.fuel, "Fuel arm");
+  req(cfg.arms_m.baggage, "Baggage arm");
+
+  req(cfg.limits.seat_min_kg, "Seat min");
+  req(cfg.limits.seat_max_kg, "Seat max");
+  req(cfg.limits.total_seat_min_kg, "Total seat min");
+  req(cfg.limits.baggage_max_kg, "Baggage max");
+
+  return missing;
+}
+
+function getLimits(cfg) {
+  const a = Number(cfg.cg_limits_m_forward_of_datum.aft_limit);
+  const f = Number(cfg.cg_limits_m_forward_of_datum.forward_limit);
+  return [Math.min(a,f), Math.max(a,f)];
+}
+
+function getIndexDivisor(cfg) {
+  const d = Number(cfg.index.moment_index_divisor);
   return (d === 0) ? 1 : d;
 }
 
-function fixedItemsTotals() {
-  const items = Array.isArray(DEFAULT_CONFIG.fixed_items) ? DEFAULT_CONFIG.fixed_items : [];
+function fixedItemsTotals(cfg) {
+  const items = Array.isArray(cfg.fixed_items) ? cfg.fixed_items : [];
   let tw = 0;
   let tm = 0;
   const lines = [];
@@ -288,12 +544,12 @@ function fixedItemsTotals() {
   };
 }
 
-function calcFromWheels(nose, left, right) {
-  const arms = DEFAULT_CONFIG.arms_m;
+function calcFromWheels(cfg, nose, left, right) {
+  const arms = cfg.arms_m;
   const totalWt = nose + left + right;
   const totalMom = nose * Number(arms.nose_wheel) + left * Number(arms.left_main_wheel) + right * Number(arms.right_main_wheel);
   const cg = totalWt ? totalMom / totalWt : NaN;
-  const idx = totalMom / getIndexDivisor();
+  const idx = totalMom / getIndexDivisor(cfg);
   return {
     weight_kg: totalWt,
     moment_kgm: totalMom,
@@ -302,32 +558,24 @@ function calcFromWheels(nose, left, right) {
   };
 }
 
-function currentEmptyPoint() {
-  const wtS = String(el("emptyWt").value || "").trim();
-  const momS = String(el("emptyMoment").value || "").trim();
-  if (wtS && momS) {
-    const wt = safeNum(wtS);
-    const mom = safeNum(momS);
-    if (wt > 0) {
-      return {
-        weight_kg: wt,
-        moment_kgm: mom,
-        cg_m: mom / wt,
-        index: mom / getIndexDivisor()
-      };
-    }
+function currentEmptyPoint(cfg) {
+  const wt = safeNum(el("emptyWt").value, null);
+  const mom = safeNum(el("emptyMoment").value, null);
+  if (wt !== null && mom !== null && wt > 0) {
+    return {
+      weight_kg: wt,
+      moment_kgm: mom,
+      cg_m: mom / wt,
+      index: mom / getIndexDivisor(cfg)
+    };
   }
 
-  const noseS = String(el("noseLoad").value || "").trim();
-  const leftS = String(el("leftLoad").value || "").trim();
-  const rightS = String(el("rightLoad").value || "").trim();
-  if (!(noseS && leftS && rightS)) return null;
-
-  const nose = safeNum(noseS);
-  const left = safeNum(leftS);
-  const right = safeNum(rightS);
+  const nose = safeNum(el("noseLoad").value, null);
+  const left = safeNum(el("leftLoad").value, null);
+  const right = safeNum(el("rightLoad").value, null);
+  if (nose === null || left === null || right === null) return null;
   if (nose + left + right <= 0) return null;
-  return calcFromWheels(nose, left, right);
+  return calcFromWheels(cfg, nose, left, right);
 }
 
 function readExtraItems() {
@@ -337,7 +585,7 @@ function readExtraItems() {
     if (!name) return;
     const w = safeNum(el(wtId).value, 0);
     const arm = safeNum(el(armId).value, 0);
-    if (Math.abs(w) < 1e-12) return;
+    if (!isFinite(w) || !isFinite(arm) || Math.abs(w) < 1e-12) return;
     out.push([name, w, arm]);
   }
   addOne("exName1","exWt1","exArm1");
@@ -355,15 +603,14 @@ function readExtraItems() {
   return out;
 }
 
-function calcLoaded(emptyWt, emptyMom) {
-  const fuelCfg = DEFAULT_CONFIG.fuel;
-  const dens = Number(fuelCfg.density_kg_per_l);
-  const cap = getFuelCap();
+function calcLoaded(cfg, emptyWt, emptyMom) {
+  const dens = Number(cfg.fuel.density_kg_per_l);
+  const cap = Number(cfg.fuel.capacity_l);
 
-  const pilot = safeNum(el("pilotKg").value, 0);
-  const pax = safeNum(el("paxKg").value, 0);
-  const fuelL = safeNum(el("fuelL").value, 0);
-  const baggage = safeNum(el("baggageKg").value, 0);
+  const pilot = safeNum(el("pilotKg").value, 0) || 0;
+  const pax = safeNum(el("paxKg").value, 0) || 0;
+  const fuelL = safeNum(el("fuelL").value, 0) || 0;
+  const baggage = safeNum(el("baggageKg").value, 0) || 0;
 
   if (fuelL < 0) throw new Error("Fuel litres cannot be negative.");
   if (cap > 0 && fuelL > cap) throw new Error("Fuel litres exceed capacity (" + fmt1(cap) + " L).");
@@ -375,7 +622,7 @@ function calcLoaded(emptyWt, emptyMom) {
   let fixedMom = 0;
   let fixedDetail = "  (none)";
   if (el("includeFixed").checked) {
-    const fx = fixedItemsTotals();
+    const fx = fixedItemsTotals(cfg);
     fixedWt = fx.tw;
     fixedMom = fx.tm;
     fixedDetail = fx.lines;
@@ -385,21 +632,21 @@ function calcLoaded(emptyWt, emptyMom) {
 
   if (pilot) {
     wt += pilot;
-    mom += pilot * getSeatArm("pilot", el("pilotSeat").value);
+    mom += pilot * Number(cfg.arms_m.pilot_seat.aft_most);
   }
   if (pax) {
     wt += pax;
-    mom += pax * getSeatArm("pax", el("paxSeat").value);
+    mom += pax * Number(cfg.arms_m.passenger_seat.aft_most);
   }
 
   const fuelKg = fuelL * dens;
   if (fuelKg) {
     wt += fuelKg;
-    mom += fuelKg * Number(DEFAULT_CONFIG.arms_m.fuel);
+    mom += fuelKg * Number(cfg.arms_m.fuel);
   }
   if (baggage) {
     wt += baggage;
-    mom += baggage * Number(DEFAULT_CONFIG.arms_m.baggage);
+    mom += baggage * Number(cfg.arms_m.baggage);
   }
 
   const extra = readExtraItems();
@@ -411,7 +658,7 @@ function calcLoaded(emptyWt, emptyMom) {
   }
 
   const cg = wt ? mom / wt : NaN;
-  const idx = mom / getIndexDivisor();
+  const idx = mom / getIndexDivisor(cfg);
 
   return {
     weight_kg: wt,
@@ -430,19 +677,14 @@ function calcLoaded(emptyWt, emptyMom) {
   };
 }
 
-function fmt1(x) {
-  if (!isFinite(x)) return "nan";
-  return x.toFixed(1);
-}
-
-function statusLines(totalWt, cg, pilot, pax, baggage) {
-  const mtow = getMtow();
-  const [lo, hi] = getLimits();
+function statusLines(cfg, totalWt, cg, pilot, pax, baggage) {
+  const mtow = Number(cfg.mtow_kg);
+  const [lo, hi] = getLimits(cfg);
 
   const withinW = totalWt <= mtow + 1e-9;
   const withinCg = (cg >= lo - 1e-12) && (cg <= hi + 1e-12);
 
-  const lim = DEFAULT_CONFIG.limits;
+  const lim = cfg.limits;
   const seatMin = Number(lim.seat_min_kg);
   const seatMax = Number(lim.seat_max_kg);
   const totalSeatMin = Number(lim.total_seat_min_kg);
@@ -472,25 +714,23 @@ function statusLines(totalWt, cg, pilot, pax, baggage) {
   ];
 }
 
-function fmt0(x) {
-  if (!isFinite(x)) return "nan";
-  return String(Math.round(x));
-}
-
-let lastEmptyComputed = null;
-
 function computeEmptyFromWheels(showError=true) {
   try {
-    const nose = safeNum(el("noseLoad").value);
-    const left = safeNum(el("leftLoad").value);
-    const right = safeNum(el("rightLoad").value);
-    const res = calcFromWheels(nose,left,right);
-    lastEmptyComputed = res;
+    const cfg = getConfigFromInputs();
+    const missing = validateConfig(cfg);
+    if (missing.length) throw new Error("Missing aircraft data: " + missing.join(", "));
+
+    const nose = safeNum(el("noseLoad").value, null);
+    const left = safeNum(el("leftLoad").value, null);
+    const right = safeNum(el("rightLoad").value, null);
+    if (nose === null || left === null || right === null) throw new Error("Enter all 3 wheel loads.");
+    const res = calcFromWheels(cfg, nose, left, right);
+    state.lastEmptyComputed = res;
     el("emptyFromWheelsSummary").textContent =
       "Computed EMPTY: weight " + fmt2(res.weight_kg) + " kg, moment " + fmt3(res.moment_kgm) + " kg*m, CG " + fmt3(res.cg_m) + " m FoD, index " + fmt3(res.index);
     return res;
   } catch (e) {
-    lastEmptyComputed = null;
+    state.lastEmptyComputed = null;
     el("emptyFromWheelsSummary").textContent = "";
     if (showError) alert(e.message || String(e));
     return null;
@@ -498,46 +738,139 @@ function computeEmptyFromWheels(showError=true) {
 }
 
 function copyComputedEmpty() {
-  if (!lastEmptyComputed) {
+  if (!state.lastEmptyComputed) {
     const res = computeEmptyFromWheels(false);
     if (!res) {
       alert("Compute EMPTY from wheel loads first.");
       return;
     }
   }
-  el("emptyWt").value = fmt3(lastEmptyComputed.weight_kg);
-  el("emptyMoment").value = fmt3(lastEmptyComputed.moment_kgm);
+  el("emptyWt").value = fmt3(state.lastEmptyComputed.weight_kg);
+  el("emptyMoment").value = fmt3(state.lastEmptyComputed.moment_kgm);
   updateAll();
 }
 
 function computeLoaded(showError=true) {
   try {
-    const empty = currentEmptyPoint();
+    const cfg = getConfigFromInputs();
+    const missing = validateConfig(cfg);
+    if (missing.length) throw new Error("Missing aircraft data: " + missing.join(", "));
+
+    const empty = currentEmptyPoint(cfg);
     if (!empty) throw new Error("Enter baseline (weight + moment) or fill all 3 wheel loads.");
-    const res = calcLoaded(empty.weight_kg, empty.moment_kgm);
-    return { empty: empty, loaded: res };
+
+    const res = calcLoaded(cfg, empty.weight_kg, empty.moment_kgm);
+    return { cfg: cfg, empty: empty, loaded: res };
   } catch (e) {
     if (showError) alert(e.message || String(e));
     return null;
   }
 }
 
+function updateHighlights(cfg) {
+  // highlight fuel capacity if not 73 L
+  const cap = safeNum(el("fuelCap").value, null);
+  if (cap !== null) setWarn(el("fuelCap"), Math.abs(cap - 73.0) > 1e-9);
+  else setWarn(el("fuelCap"), false);
+
+  // if preset is Nynja, highlight mtow/cg if changed from preset
+  const prof = AIRCRAFT_PROFILES["Skyranger Nynja 600"];
+  const isNynja = (el("acType").value === "Skyranger Nynja 600" && prof && prof.preset);
+  if (isNynja) {
+    const base = prof.config;
+    const mtow = safeNum(el("mtow").value, null);
+    const aft = safeNum(el("cgAft").value, null);
+    const fwd = safeNum(el("cgFwd").value, null);
+    setWarn(el("mtow"), mtow !== null && Math.abs(mtow - base.mtow_kg) > 1e-9);
+    setWarn(el("cgAft"), aft !== null && Math.abs(aft - base.cg_limits_m_forward_of_datum.aft_limit) > 1e-9);
+    setWarn(el("cgFwd"), fwd !== null && Math.abs(fwd - base.cg_limits_m_forward_of_datum.forward_limit) > 1e-9);
+  } else {
+    setWarn(el("mtow"), false);
+    setWarn(el("cgAft"), false);
+    setWarn(el("cgFwd"), false);
+  }
+
+  // If non-preset aircraft selected, highlight missing required aircraft-data fields
+  const missing = validateConfig(cfg);
+  const missingSet = new Set(missing);
+
+  function hi(id, name) {
+    setWarn(el(id), missingSet.has(name));
+  }
+
+  hi("mtow", "MTOW");
+  hi("cgAft", "CG aft limit");
+  hi("cgFwd", "CG fwd limit");
+  hi("fuelCap", "Fuel capacity");
+
+  hi("armNose", "Nose wheel arm");
+  hi("armMainL", "Left main arm");
+  hi("armMainR", "Right main arm");
+  hi("idxDiv", "Moment index divisor");
+
+  hi("armPilot", "Pilot seat arm");
+  hi("armPax", "Passenger seat arm");
+  hi("armFuel", "Fuel arm");
+  hi("armBag", "Baggage arm");
+
+  hi("fuelDens", "Fuel density");
+  hi("seatMin", "Seat min");
+  hi("seatMax", "Seat max");
+  hi("seatTotalMin", "Total seat min");
+  hi("bagMax", "Baggage max");
+
+  el("acDataHint").textContent = missing.length ? ("Missing aircraft data: " + missing.join(", ")) : "Aircraft data OK.";
+}
+
+function updateFixedInfo(cfg) {
+  const fx = fixedItemsTotals(cfg);
+  const cap = cfg.fuel.capacity_l;
+  const dens = cfg.fuel.density_kg_per_l;
+  const cnt = Array.isArray(cfg.fixed_items) ? cfg.fixed_items.length : 0;
+  el("fixedItemsInfo").textContent = "Fuel density: " + fmt3(dens) + " kg/L | Fuel cap: " + fmt1(cap) + " L | Fixed items: " + String(cnt) + (cnt ? (" | Totals: " + fmt3(fx.tw) + " kg, " + fmt3(fx.tm) + " kg*m") : "");
+}
+
+function updateBanner(cfg) {
+  const reg = String(el("reg").value || "").trim().toUpperCase();
+  const mtow = cfg.mtow_kg;
+  const [lo, hi] = (isFinite(cfg.cg_limits_m_forward_of_datum.aft_limit) && isFinite(cfg.cg_limits_m_forward_of_datum.forward_limit)) ? getLimits(cfg) : [NaN, NaN];
+  const cap = cfg.fuel.capacity_l;
+
+  let regTxt = reg ? (" | Reg: " + reg) : "";
+  el("banner").textContent =
+    "A/C: " + cfg.aircraft_name + regTxt +
+    " | MTOW: " + (isFinite(mtow) ? fmt1(mtow) : "n/a") + " kg" +
+    " | CG limits: " + (isFinite(lo) ? fmt3(lo) : "n/a") + ".." + (isFinite(hi) ? fmt3(hi) : "n/a") + " m FoD" +
+    " | Fuel cap: " + (isFinite(cap) ? fmt1(cap) : "n/a") + " L";
+}
+
 function buildResultsText(bundle) {
   const lines = [];
-  const [lo, hi] = getLimits();
-  const mtow = getMtow();
-  const cap = getFuelCap();
+  if (!bundle || !bundle.cfg) {
+    lines.push(APP_TITLE + " (Web)");
+    lines.push(DISCLAIMER_SHORT);
+    lines.push("");
+    lines.push("Date/time: " + nowStamp());
+    lines.push("");
+    lines.push("Select A/C Type and enter aircraft data to compute.");
+    return lines.join("\n");
+  }
 
-  lines.push("W&B for Ultralight Version 2.01 (Web)");
+  const cfg = bundle.cfg;
+  const [lo, hi] = getLimits(cfg);
+
+  lines.push(APP_TITLE + " (Web)");
+  lines.push(DISCLAIMER_SHORT);
+  lines.push("");
   lines.push("Date/time: " + nowStamp());
-  lines.push("Aircraft: " + DEFAULT_CONFIG.aircraft_name);
-  lines.push("Datum: " + DEFAULT_CONFIG.datum_description);
-  lines.push("Fuel capacity: " + fmt1(cap) + " L");
-  lines.push("MTOW: " + fmt1(mtow) + " kg");
+  lines.push("A/C type: " + cfg.aircraft_name);
+  lines.push("Datum: " + cfg.datum_description);
+  lines.push("Fuel capacity: " + fmt1(cfg.fuel.capacity_l) + " L");
+  lines.push("MTOW: " + fmt1(cfg.mtow_kg) + " kg");
   lines.push("CG limits (m FoD): " + fmt3(lo) + " .. " + fmt3(hi));
   lines.push("");
 
-  if (bundle && bundle.empty) {
+  if (bundle.empty) {
     const e = bundle.empty;
     lines.push("EMPTY");
     lines.push("  Weight: " + fmt2(e.weight_kg) + " kg");
@@ -550,14 +883,14 @@ function buildResultsText(bundle) {
   lines.push("");
 
   lines.push("LOAD INPUTS");
-  lines.push("  Pilot:     " + fmt1(safeNum(el("pilotKg").value, 0)) + " kg (" + el("pilotSeat").value + ")");
-  lines.push("  Passenger: " + fmt1(safeNum(el("paxKg").value, 0)) + " kg (" + el("paxSeat").value + ")");
-  lines.push("  Fuel:      " + fmt1(safeNum(el("fuelL").value, 0)) + " L");
-  lines.push("  Baggage:   " + fmt1(safeNum(el("baggageKg").value, 0)) + " kg");
+  lines.push("  Pilot:     " + fmt1(safeNum(el("pilotKg").value, 0) || 0) + " kg");
+  lines.push("  Passenger: " + fmt1(safeNum(el("paxKg").value, 0) || 0) + " kg");
+  lines.push("  Fuel:      " + fmt1(safeNum(el("fuelL").value, 0) || 0) + " L");
+  lines.push("  Baggage:   " + fmt1(safeNum(el("baggageKg").value, 0) || 0) + " kg");
   lines.push("  Include fixed items: " + (el("includeFixed").checked ? "YES" : "NO"));
   lines.push("");
 
-  if (bundle && bundle.loaded) {
+  if (bundle.loaded) {
     const r = bundle.loaded;
     lines.push("LOADED");
     lines.push("  Weight: " + fmt2(r.weight_kg) + " kg");
@@ -566,7 +899,7 @@ function buildResultsText(bundle) {
     lines.push("  Index:  " + fmt3(r.index));
     lines.push("");
     lines.push("Checks:");
-    for (const ln of statusLines(r.weight_kg, r.cg_m, r.pilot, r.pax, r.baggage)) lines.push("  " + ln);
+    for (const ln of statusLines(cfg, r.weight_kg, r.cg_m, r.pilot, r.pax, r.baggage)) lines.push("  " + ln);
     lines.push("");
     if (el("includeFixed").checked) {
       lines.push("Fixed items included:");
@@ -583,91 +916,13 @@ function buildResultsText(bundle) {
   return lines.join("\n");
 }
 
-function updateBanner() {
-  const reg = String(el("reg").value || "").trim().toUpperCase();
-  const mtow = getMtow();
-  const [lo, hi] = getLimits();
-  const cap = getFuelCap();
-
-  let regTxt = reg ? (" | Reg: " + reg) : "";
-  el("banner").textContent =
-    "Aircraft: " + DEFAULT_CONFIG.aircraft_name + regTxt +
-    " | Datum: " + DEFAULT_CONFIG.datum_description +
-    " | MTOW: " + fmt1(mtow) + " kg" +
-    " | CG limits: " + fmt3(lo) + ".." + fmt3(hi) + " m FoD" +
-    " | Fuel cap: " + fmt1(cap) + " L";
-}
-
-function updateHighlights() {
-  function setWarn(input, isWarn) {
-    if (isWarn) input.classList.add("warn");
-    else input.classList.remove("warn");
-  }
-  const mtow0 = Number(DEFAULT_CONFIG.mtow_kg);
-  const a0 = Number(DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit);
-  const f0 = Number(DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit);
-
-  const mtow = getMtow();
-  const [lo, hi] = getLimits();
-  const cap = getFuelCap();
-
-  setWarn(el("mtow"), Math.abs(mtow - mtow0) > 1e-9);
-  // Compare entered values, not sorted, to preserve intent. If swapped, highlight.
-  const aEntered = safeNum(el("cgAft").value, a0);
-  const fEntered = safeNum(el("cgFwd").value, f0);
-  setWarn(el("cgAft"), Math.abs(aEntered - a0) > 1e-9);
-  setWarn(el("cgFwd"), Math.abs(fEntered - f0) > 1e-9);
-
-  // Fuel cap highlight rule: yellow if not 73 L
-  setWarn(el("fuelCap"), Math.abs(cap - 73.0) > 1e-9);
-}
-
-function updateFixedInfo() {
-  const fx = fixedItemsTotals();
-  const cap = getFuelCap();
-  const dens = Number(DEFAULT_CONFIG.fuel.density_kg_per_l);
-  let lines = [];
-  lines.push("Fuel density: " + fmt3(dens) + " kg/L");
-  lines.push("Fuel cap: " + fmt1(cap) + " L");
-  lines.push("Fixed items configured: " + (Array.isArray(DEFAULT_CONFIG.fixed_items) && DEFAULT_CONFIG.fixed_items.length ? DEFAULT_CONFIG.fixed_items.length : 0));
-  if (Array.isArray(DEFAULT_CONFIG.fixed_items) && DEFAULT_CONFIG.fixed_items.length) {
-    lines.push("Fixed items totals: " + fmt3(fx.tw) + " kg, " + fmt3(fx.tm) + " kg*m");
-  }
-  el("fixedItemsInfo").textContent = lines.join(" | ");
-}
-
 function updateMoreCount() {
   el("moreCount").textContent = "More items: " + state.moreItems.length;
 }
 
-function updateAll() {
-  updateHighlights();
-  updateBanner();
-  updateFixedInfo();
-
-  // Keep empty-from-wheels summary live if wheel fields are filled
-  const n = String(el("noseLoad").value || "").trim();
-  const l = String(el("leftLoad").value || "").trim();
-  const r = String(el("rightLoad").value || "").trim();
-  if (n && l && r) computeEmptyFromWheels(false);
-  else el("emptyFromWheelsSummary").textContent = "";
-
-  const bundle = computeLoaded(false);
-  el("results").textContent = buildResultsText(bundle);
-
-  // chart redraw
-  drawCharts(bundle);
-
-  saveState();
-}
-
 function drawCharts(bundle) {
-  // On-screen chart
   const show = el("chartCard").style.display !== "none";
   if (show) drawChartToCanvas(el("chart"), bundle);
-
-  // Print chart always updated
-  drawChartToCanvas(el("printChart"), bundle);
 }
 
 function drawChartToCanvas(canvas, bundle) {
@@ -675,13 +930,27 @@ function drawChartToCanvas(canvas, bundle) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const mtow = getMtow();
-  const [lo, hi] = getLimits();
+  // Clear
+  const W = canvas.width;
+  const H = canvas.height;
+  ctx.clearRect(0,0,W,H);
 
-  const empty = bundle && bundle.empty ? bundle.empty : null;
-  const loaded = bundle && bundle.loaded ? bundle.loaded : null;
+  if (!bundle || !bundle.cfg || !bundle.loaded) {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = "#000000";
+    ctx.font = "14px Arial";
+    ctx.fillText("Enter aircraft data and compute LOADED to show chart.", 20, 40);
+    return;
+  }
 
-  // Determine ranges
+  const cfg = bundle.cfg;
+  const mtow = Number(cfg.mtow_kg);
+  const [lo, hi] = getLimits(cfg);
+
+  const empty = bundle.empty || null;
+  const loaded = bundle.loaded || null;
+
   const xPad = 0.05;
   const xMin = Math.min(lo, hi) - xPad;
   const xMax = Math.max(lo, hi) + xPad;
@@ -692,12 +961,6 @@ function drawChartToCanvas(canvas, bundle) {
   yMax = yMax * 1.10;
   if (yMax < 10) yMax = 10;
 
-  // Layout
-  const W = canvas.width;
-  const H = canvas.height;
-  ctx.clearRect(0,0,W,H);
-
-  // background
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0,0,W,H);
 
@@ -709,17 +972,12 @@ function drawChartToCanvas(canvas, bundle) {
   const plotW = W - marginL - marginR;
   const plotH = H - marginT - marginB;
 
-  function xToPx(x) {
-    return marginL + (x - xMin) * plotW / (xMax - xMin);
-  }
-  function yToPx(y) {
-    return marginT + (yMax - y) * plotH / (yMax);
-  }
+  function xToPx(x) { return marginL + (x - xMin) * plotW / (xMax - xMin); }
+  function yToPx(y) { return marginT + (yMax - y) * plotH / (yMax); }
 
   // grid
   ctx.strokeStyle = "#d0d0d0";
   ctx.lineWidth = 1;
-
   for (let i=0;i<=10;i++) {
     const y = (yMax * i / 10);
     const py = yToPx(y);
@@ -728,7 +986,6 @@ function drawChartToCanvas(canvas, bundle) {
     ctx.lineTo(marginL+plotW, py);
     ctx.stroke();
   }
-
   for (let i=0;i<=10;i++) {
     const x = xMin + (xMax-xMin) * i / 10;
     const px = xToPx(x);
@@ -738,7 +995,7 @@ function drawChartToCanvas(canvas, bundle) {
     ctx.stroke();
   }
 
-  // envelope fill
+  // envelope
   ctx.fillStyle = "rgba(37,99,235,0.12)";
   const x1 = xToPx(lo);
   const x2 = xToPx(hi);
@@ -785,7 +1042,7 @@ function drawChartToCanvas(canvas, bundle) {
   ctx.fillText("hi " + fmt3(hi), xToPx(hi) + 4, marginT + 24);
   ctx.fillText("MTOW " + fmt1(mtow), marginL + 4, yToPx(mtow) - 6);
 
-  // tick labels
+  // ticks
   ctx.fillStyle = "#000000";
   ctx.font = "10px Arial";
   for (let i=0;i<=5;i++) {
@@ -816,7 +1073,6 @@ function drawChartToCanvas(canvas, bundle) {
   if (empty) plotPoint(empty, "EMPTY");
   if (loaded) plotPoint(loaded, "LOADED");
 
-  // title
   ctx.fillStyle = "#000000";
   ctx.font = "14px Arial";
   ctx.fillText("W&B chart (updated " + (new Date()).toLocaleTimeString() + ")", marginL, 20);
@@ -834,10 +1090,31 @@ function toggleChart() {
   updateAll();
 }
 
-function resetLimits() {
-  el("mtow").value = DEFAULT_CONFIG.mtow_kg;
-  el("cgAft").value = DEFAULT_CONFIG.cg_limits_m_forward_of_datum.aft_limit;
-  el("cgFwd").value = DEFAULT_CONFIG.cg_limits_m_forward_of_datum.forward_limit;
+function resetToPreset() {
+  const name = el("acType").value;
+  fillFromPreset(name);
+}
+
+function clearAircraftData() {
+  // Keep selection; clear aircraft data inputs and top fields (except reg)
+  el("fuelCap").value = "";
+  el("mtow").value = "";
+  el("cgAft").value = "";
+  el("cgFwd").value = "";
+  el("armNose").value = "";
+  el("armMainL").value = "";
+  el("armMainR").value = "";
+  el("idxDiv").value = "";
+  el("armPilot").value = "";
+  el("armPax").value = "";
+  el("armFuel").value = "";
+  el("armBag").value = "";
+  el("fuelDens").value = "";
+  el("seatMin").value = "";
+  el("seatMax").value = "";
+  el("seatTotalMin").value = "";
+  el("bagMax").value = "";
+  el("includeFixed").checked = false;
   updateAll();
 }
 
@@ -867,9 +1144,7 @@ function buildMoreTable() {
   const host = el("moreTable");
   host.innerHTML = "";
 
-  function addCell(node) {
-    host.appendChild(node);
-  }
+  function addCell(node) { host.appendChild(node); }
 
   const h1 = document.createElement("div"); h1.className = "h"; h1.textContent = "Name";
   const h2 = document.createElement("div"); h2.className = "h"; h2.textContent = "Weight (kg)";
@@ -918,7 +1193,6 @@ function addMoreRow() {
 }
 
 function moreOK() {
-  // Normalize to numbers where possible; keep strings if empty
   const cleaned = [];
   for (const it of state.moreItems) {
     const name = String(it.name || "").trim();
@@ -943,76 +1217,165 @@ function clearExtras() {
   updateAll();
 }
 
-function buildHelpText() {
-  const [lo, hi] = getLimits();
-  const mtow = getMtow();
-  const cap = getFuelCap();
-  const dens = Number(DEFAULT_CONFIG.fuel.density_kg_per_l);
+function doPrint() {
+  const bundle = computeLoaded(false);
+  if (!bundle) return;
 
+  const reg = String(el("reg").value || "").trim().toUpperCase();
+  const title = "Loadsheet - " + APP_TITLE;
+  const text = buildResultsText(bundle);
+
+  // Render chart to an offscreen canvas
+  const off = document.createElement("canvas");
+  off.width = 900;
+  off.height = 650;
+  drawChartToCanvas(off, bundle);
+  const imgData = off.toDataURL("image/png");
+
+  const w = window.open("", "_blank");
+  if (!w) {
+    alert("Popup blocked. Please allow popups to print.");
+    return;
+  }
+
+  const css = `
+    body { font-family: Arial, sans-serif; margin: 14mm; color: #000; }
+    .reg { text-align: center; font-weight: 800; font-size: 18px; margin-bottom: 4mm; }
+    .title { font-weight: 800; font-size: 14px; margin-bottom: 2mm; }
+    .meta { font-size: 11px; margin-bottom: 4mm; }
+    pre { white-space: pre-wrap; border: 1px solid #999; padding: 8px; font-size: 10px; }
+    img { width: 100%; border: 1px solid #999; margin-top: 6mm; }
+  `;
+
+  const html = `
+    <!doctype html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>${title}</title>
+      <style>${css}</style>
+    </head>
+    <body>
+      <div class="reg">${reg ? reg : ""}</div>
+      <div class="title">Loadsheet</div>
+      <div class="meta">${bundle.cfg.aircraft_name} | ${nowStamp()}</div>
+      <pre>${escapeHtml(text)}</pre>
+      <img src="${imgData}" alt="W&B chart">
+      <script>
+        window.onload = function() {
+          setTimeout(function(){ window.print(); }, 150);
+        };
+      </script>
+    </body>
+    </html>
+  `;
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+function buildHelpText() {
   const lines = [];
-  lines.push("W&B for Ultralight Version 2.01 (Web) - Help");
+  lines.push(APP_TITLE + " (Web) - Help");
   lines.push("");
-  lines.push("How to use (typical):");
-  lines.push("  1) Enter wheel loads and compute EMPTY.");
-  lines.push("  2) Copy computed EMPTY to baseline fields (recommended).");
+  lines.push("DISCLAIMER");
+  lines.push("  Use at your own risk. Verify all results against approved aircraft documentation.");
+  lines.push("  The author accepts no liability for errors or misuse.");
+  lines.push("");
+  lines.push("A/C Type:");
+  lines.push("  - Skyranger Nynja 600: preset values are loaded automatically.");
+  lines.push("  - Other aircraft: aircraft data fields are cleared. Enter all required aircraft data.");
+  lines.push("");
+  lines.push("How to use:");
+  lines.push("  1) Select A/C Type and make sure aircraft data is filled.");
+  lines.push("  2) Enter wheel loads and compute EMPTY, or enter empty weight + empty moment.");
   lines.push("  3) Enter pilot/pax/fuel/baggage and compute LOADED.");
-  lines.push("  4) Use Print/Export to save as PDF.");
+  lines.push("  4) Show chart if desired. Print/Export creates a one-page loadsheet.");
   lines.push("");
-  lines.push("Sign convention:");
-  lines.push("  Datum is main wheel axles (arm 0).");
-  lines.push("  FoD (forward of datum) is positive. AoD (aft of datum) is negative.");
+  lines.push("Datum convention:");
+  lines.push("  - Datum is main wheel axles (arm 0).");
+  lines.push("  - FoD (forward of datum) is positive. AoD (aft of datum) is negative.");
   lines.push("");
-  lines.push("Editable top fields:");
-  lines.push("  Aircraft Registration prints in bold at top center in the printed/PDF loadsheet.");
-  lines.push("  Fuel Capacity can be changed. Yellow if not 73 L.");
-  lines.push("  MTOW and CG limits can be changed to use this for another aircraft.");
-  lines.push("");
-  lines.push("Current settings:");
-  lines.push("  MTOW: " + fmt1(mtow) + " kg");
-  lines.push("  CG limits: " + fmt3(lo) + " .. " + fmt3(hi) + " m FoD");
-  lines.push("  Fuel density: " + fmt3(dens) + " kg/L");
-  lines.push("  Fuel capacity: " + fmt1(cap) + " L");
-  lines.push("");
-  lines.push("Saved values:");
-  lines.push("  This web app remembers your last values using browser local storage.");
-  lines.push("");
-  lines.push("PDF:");
-  lines.push("  Use Print/Export Loadsheet (PDF). On iPad choose Print then Save as PDF (or Share).");
+  lines.push("Offline:");
+  lines.push("  - Offline install (Add to Home Screen) works best when hosted on HTTPS.");
   return lines.join("\n");
 }
 
-function prepPrint() {
-  const reg = String(el("reg").value || "").trim().toUpperCase();
-  el("printReg").textContent = reg ? reg : "";
-  el("printMeta").textContent = DEFAULT_CONFIG.aircraft_name + " | " + nowStamp();
-  const bundle = computeLoaded(false);
-  const text = buildResultsText(bundle);
-  el("printResults").textContent = text;
-  drawCharts(bundle);
-}
+function updateAll() {
+  // Hide JS warning if JS runs
+  try {
+    const w = el("jsWarning");
+    if (w) w.style.display = "none";
+  } catch (e) {}
 
-function doPrint() {
-  prepPrint();
-  // Give the browser a moment to render the print canvases
-  setTimeout(() => {
-    window.print();
-  }, 50);
+  const cfg = getConfigFromInputs();
+  updateHighlights(cfg);
+  updateFixedInfo(cfg);
+  updateBanner(cfg);
+
+  // Update empty-from-wheels summary live if possible
+  try {
+    const n = String(el("noseLoad").value || "").trim();
+    const l = String(el("leftLoad").value || "").trim();
+    const r = String(el("rightLoad").value || "").trim();
+    if (n && l && r && validateConfig(cfg).length === 0) computeEmptyFromWheels(false);
+    else el("emptyFromWheelsSummary").textContent = "";
+  } catch (e) {
+    el("emptyFromWheelsSummary").textContent = "";
+  }
+
+  const bundle = computeLoaded(false);
+  el("results").textContent = buildResultsText(bundle);
+  drawCharts(bundle);
+
+  saveState();
 }
 
 function setup() {
-  // initial state
+  // Populate dropdown
+  populateAircraftDropdown();
+
+  // Load saved state
   const st = loadState();
   applyState(st);
 
-  // Buttons
+  // On first run, if selected is Nynja but top fields are empty, load preset
+  if (el("acType").value === "Skyranger Nynja 600" && !String(el("mtow").value || "").trim()) {
+    fillFromPreset("Skyranger Nynja 600");
+  }
+
+  // Listeners
+  el("acType").addEventListener("change", () => {
+    const v = el("acType").value;
+    if (v === ADD_AIRCRAFT_OPTION) {
+      const name = addAircraftTypePrompt();
+      populateAircraftDropdown();
+      if (name) {
+        el("acType").value = name;
+        fillFromPreset(name);
+      } else {
+        // restore previous selection
+        const st = loadState();
+        const prev = st.acType || "Skyranger Nynja 600";
+        el("acType").value = prev;
+        fillFromPreset(prev);
+      }
+      return;
+    }
+    fillFromPreset(v);
+  });
+
+  el("resetLimits").addEventListener("click", resetToPreset);
+  el("btnClearAircraftData").addEventListener("click", clearAircraftData);
+
   el("btnEmptyFromWheels").addEventListener("click", () => { computeEmptyFromWheels(true); updateAll(); });
-  el("btnCopyEmpty").addEventListener("click", () => { copyComputedEmpty(); });
+  el("btnCopyEmpty").addEventListener("click", copyComputedEmpty);
   el("btnComputeLoaded").addEventListener("click", () => { const b = computeLoaded(true); if (b) updateAll(); });
   el("btnToggleChart").addEventListener("click", toggleChart);
-  el("resetLimits").addEventListener("click", resetLimits);
+
   el("btnMoreItems").addEventListener("click", openMoreModal);
   el("btnClearExtras").addEventListener("click", clearExtras);
-
   el("btnAddMoreRow").addEventListener("click", addMoreRow);
   el("btnMoreOK").addEventListener("click", moreOK);
   el("btnCloseMore").addEventListener("click", closeMoreModal);
@@ -1027,11 +1390,12 @@ function setup() {
 
   el("btnPrint").addEventListener("click", doPrint);
 
-  // Input listeners
+  // Input listeners -> updateAll
   const ids = [
     "reg","fuelCap","mtow","cgAft","cgFwd",
-    "noseLoad","leftLoad","rightLoad",
-    "emptyWt","emptyMoment",
+    "armNose","armMainL","armMainR","idxDiv","armPilot","armPax","armFuel","armBag",
+    "fuelDens","seatMin","seatMax","seatTotalMin","bagMax",
+    "noseLoad","leftLoad","rightLoad","emptyWt","emptyMoment",
     "pilotKg","paxKg","fuelL","baggageKg",
     "pilotSeat","paxSeat",
     "exName1","exWt1","exArm1",
@@ -1041,15 +1405,12 @@ function setup() {
   ];
   for (const id of ids) {
     const node = el(id);
+    if (!node) continue;
     const ev = (node.tagName === "SELECT" || node.type === "checkbox") ? "change" : "input";
     node.addEventListener(ev, () => updateAll());
     if (ev === "change") node.addEventListener("input", () => updateAll());
   }
 
-  // Print hook
-  window.addEventListener("beforeprint", prepPrint);
-
-  // Initial compute + chart
   el("btnToggleChart").textContent = "Show W&B chart";
   updateAll();
 }

@@ -1,20 +1,22 @@
-W&B for Ultralight Version 2.01 (Web + Phone + Offline PWA) - iPhone fix
+W&B for Ultralight Version 2.02 by Egill Ibsen (Web) - Multi-aircraft
 
-If iPhone keeps showing a "print-style" layout:
-- This build REMOVES all @media print layout switching.
-- Printing now opens a separate loadsheet page in a new tab/window and prints that.
+This version adds:
+- A/C Type dropdown (Skyranger Nynja 600 preset + 3 other aircraft placeholders)
+- Aircraft Registration field moved directly below the A/C Type
+- If Skyranger Nynja 600 selected: aircraft data is auto-filled (same values as before)
+- If any other aircraft selected: aircraft data is cleared and must be entered manually
 
-How to print/save PDF:
-- Tap "Print/Export Loadsheet (PDF)".
-- A new page opens with the loadsheet (results + chart).
-- Use Share/Print to Save as PDF.
+Offline / Install:
+- For offline "Add to Home Screen" behavior, host these files on HTTPS.
+- Then open the URL in Safari/Chrome and choose Add to Home Screen / Install App.
 
-Popups:
-- Printing uses a new window/tab. If Safari blocks popups, allow popups for your site.
+Files:
+- index.html, style.css, app.js
+- manifest.webmanifest, sw.js
+- icon-192.png, icon-512.png
 
-Offline (PWA) requirement:
-- Service-worker offline caching requires https:// (or http://localhost).
-- For real offline after "Add to Home Screen", host on HTTPS (GitHub Pages / Netlify / Cloudflare Pages).
+Note:
+- Computations require all required aircraft-data fields. Missing fields are highlighted in yellow.
 
-Update note:
-- Cache name bumped to force refresh. If you installed an older version, remove it from Home Screen and add again.
+
+DISCLAIMER: Use at your own risk. Verify results against approved aircraft documentation.

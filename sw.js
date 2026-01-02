@@ -1,5 +1,5 @@
 /* ASCII-only service worker */
-const CACHE_NAME = "wb-ultralight-v2-01-pwa-002";
+const CACHE_NAME = "wb-ultralight-v2-02-001";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -24,16 +24,13 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Cache-first for app shell; network fallback for anything else.
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
-
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
       return fetch(req).then((resp) => {
-        // Best effort: cache same-origin GET responses
         try {
           const url = new URL(req.url);
           if (url.origin === self.location.origin) {
@@ -42,10 +39,7 @@ self.addEventListener("fetch", (event) => {
           }
         } catch (e) {}
         return resp;
-      }).catch(() => {
-        // If offline and not cached, try returning the app shell.
-        return caches.match("./index.html");
-      });
+      }).catch(() => caches.match("./index.html"));
     })
   );
 });
