@@ -175,8 +175,9 @@ input.warn, select.warn { background: var(--warn); color: #111827; }
 
 
 /* Tailwheel control emphasis */
-.aircraft-type-row { align-items: center; margin-top: 4px; }
-.tw-field { align-self: center; }
+.aircraft-type-row { align-items: flex-start; margin-top: 4px; }
+
+.tw-field, .tandem-field { margin-top: 18px; }
 .tw-field .checkbox.tailwheel { font-size: 15px; font-weight: 800; }
 .tw-field .checkbox.tailwheel input { width: 20px; height: 20px; }
 
@@ -188,5 +189,12 @@ input.danger {
 }
 
 
-/* Tandem seating control */
-.checkbox.tandem { font-weight: 700; }
+/* Tandem checkbox styling */
+.tandem-field label.checkbox.tandem {
+  font-weight: 800;
+  font-size: 15px;
+}
+.tandem-field .hint { font-size: 11px; }
+
+
+.tandem-field .checkbox.tandem input { width: 20px; height: 20px; }

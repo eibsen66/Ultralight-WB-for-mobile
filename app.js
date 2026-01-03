@@ -181,8 +181,8 @@ const state = {
 
 function defaultState() {
   return {
-    isTandem: false,
     isTailwheel: false,
+    isTandem: false,
     tailwheelArmEdited: false,
     acType: "Skyranger Nynja 600",
     reg: "",
@@ -249,11 +249,10 @@ function saveState() {
 
 function collectState() {
   return {
-    isTandem: el("isTandem").checked,
     acType: el("acType").value,
     isTailwheel: el("isTailwheel").checked,
+    isTandem: el("isTandem").checked,
     tailwheelArmEdited: !!state.tailwheelArmEdited,
-    isTailwheel: el("isTailwheel").checked,
     reg: clampText(el("reg").value, 20),
     fuelCap: el("fuelCap").value,
     mtow: el("mtow").value,
@@ -343,6 +342,10 @@ function applyState(st) {
   el("acType").value = st.acType || "Skyranger Nynja 600";
   el("reg").value = st.reg || "";
 
+
+  el("isTailwheel").checked = !!st.isTailwheel;
+  el("isTandem").checked = !!st.isTandem;
+  state.tailwheelArmEdited = !!st.tailwheelArmEdited;
   el("fuelCap").value = st.fuelCap || "";
   el("mtow").value = st.mtow || "";
   el("cgAft").value = st.cgAft || "";
@@ -780,54 +783,6 @@ function updateHighlights(cfg) {
   const cap = safeNum(el("fuelCap").value, null);
   if (cap !== null) setWarn(el("fuelCap"), Math.abs(cap - 73.0) > 1e-9);
   else setWarn(el("fuelCap"), false);
-
-  // if preset is Nynja, highlight mtow/cg if changed from preset
-  const prof = AIRCRAFT_PROFILES["Skyranger Nynja 600"];
-  const isNynja = (el("acType").value === "Skyranger Nynja 600" && prof && prof.preset);
-  if (isNynja) {
-    const base = prof.config;
-    const mtow = safeNum(el("mtow").value, null);
-    const aft = safeNum(el("cgAft").value, null);
-    const fwd = safeNum(el("cgFwd").value, null);
-    setWarn(el("mtow"), mtow !== null && Math.abs(mtow - base.mtow_kg) > 1e-9);
-    setWarn(el("cgAft"), aft !== null && Math.abs(aft - base.cg_limits_m_forward_of_datum.aft_limit) > 1e-9);
-    setWarn(el("cgFwd"), fwd !== null && Math.abs(fwd - base.cg_limits_m_forward_of_datum.forward_limit) > 1e-9);
-  } else {
-    setWarn(el("mtow"), false);
-    setWarn(el("cgAft"), false);
-    setWarn(el("cgFwd"), false);
-  }
-
-  // If non-preset aircraft selected, highlight missing required aircraft-data fields
-  const missing = validateConfig(cfg);
-  const missingSet = new Set(missing);
-
-  function hi(id, name) {
-    setWarn(el(id), missingSet.has(name));
-  }
-
-  hi("mtow", "MTOW");
-  hi("cgAft", "CG aft limit");
-  hi("cgFwd", "CG fwd limit");
-  hi("fuelCap", "Fuel capacity");
-
-  hi("armNose", "Nose wheel arm");
-  hi("armMainL", "Left main arm");
-  hi("armMainR", "Right main arm");
-  hi("idxDiv", "Moment index divisor");
-
-  hi("armPilot", "Pilot seat arm");
-  hi("armPax", "Passenger seat arm");
-  hi("armFuel", "Fuel arm");
-  hi("armBag", "Baggage arm");
-
-  hi("fuelDens", "Fuel density");
-  hi("seatMin", "Seat min");
-  hi("seatMax", "Seat max");
-  hi("seatTotalMin", "Total seat min");
-  hi("bagMax", "Baggage max");
-
-  el("acDataHint").textContent = missing.length ? ("Missing aircraft data: " + missing.join(", ")) : "Aircraft data OK.";
 }
 
 function updateFixedInfo(cfg) {
@@ -1356,30 +1311,26 @@ function updateTailwheelUI(userToggled=false) {
 
 
 function updateTandemUI() {
-  const t = el("isTandem");
-  const isT = !!(t && t.checked);
+  const cb = el("isTandem");
+  if (!cb) return;
+  const isTan = !!cb.checked;
 
-  const pField = el("pilotSeatField");
-  const xField = el("paxSeatField");
-  if (pField) pField.style.display = isT ? "none" : "";
-  if (xField) xField.style.display = isT ? "none" : "";
-
-  // Fix seat position values to a stable value when hidden
-  if (isT) {
-    try { el("pilotSeat").value = "aft"; } catch (e) {}
-    try { el("paxSeat").value = "aft"; } catch (e) {}
-  }
+  const p = el("pilotSeatField");
+  const q = el("paxSeatField");
+  if (p) p.style.display = isTan ? "none" : "";
+  if (q) q.style.display = isTan ? "none" : "";
 
   const hint = el("tandemHint");
   if (hint) {
-    hint.textContent = isT ? "For tandem: set pilot and passenger seat arms in Aircraft data." : "";
+    hint.textContent = isTan ? "Tandem: seat arms come from Aircraft data (pilot/passenger arms). Fwd/aft selectors hidden." :
+                               "Tandem: OFF. Fwd/aft seat selectors are available.";
   }
 }
 
-
 function updateAll() {
-  try { updateTandemUI(); } catch (e) {}
   try { updateTailwheelUI(); } catch (e) {}
+  try { updateTandemUI(); } catch (e) {}
+  try { updateTandemUI(); } catch (e) {}
   // Hide JS warning if JS runs
   try {
     const w = el("jsWarning");
@@ -1448,7 +1399,6 @@ function setup() {
 
   
   el("isTailwheel").addEventListener("change", () => { updateTailwheelUI(true); updateAll(); });
-  el("isTandem").addEventListener("change", () => { updateTandemUI(); updateAll(); });
 el("resetLimits").addEventListener("click", resetToPreset);
   el("btnClearAircraftData").addEventListener("click", clearAircraftData);
 
@@ -1486,7 +1436,7 @@ el("resetLimits").addEventListener("click", resetToPreset);
     "exName3","exWt3","exArm3",
     "includeFixed"
     ,"isTailwheel"
-      ,"isTandem"
+    ,"isTandem"
   ];
   for (const id of ids) {
     const node = el(id);
