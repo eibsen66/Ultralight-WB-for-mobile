@@ -44,6 +44,18 @@
         <div class="field tight tandem-field">
           <label class="checkbox tandem"><input id="isTandem" type="checkbox"> Tandem</label>
           <div id="tandemHint" class="hint" style="margin-top:4px;">Tandem seating hides fwd/aft seat selectors.</div>
+
+        <div class="field fuel-field">
+          <label for="fuelType">Fuel type</label>
+          <select id="fuelType">
+            <option value="mogas_e10_95" selected>Mogas 95 E10 (typical, 15 C)</option>
+            <option value="avgas_100ll">Avgas 100LL (typical, 15 C)</option>
+            <option value="mogas_e5_95">Mogas 95 E5/E0 (typical, 15 C)</option>
+            <option value="custom">Custom (edit density)</option>
+          </select>
+          <div class="hint">Density varies with temperature/supplier</div>
+        </div>
+
         </div>
       </div>
 

@@ -177,7 +177,7 @@ input.warn, select.warn { background: var(--warn); color: #111827; }
 /* Tailwheel control emphasis */
 .aircraft-type-row { align-items: flex-start; margin-top: 4px; }
 
-.tw-field, .tandem-field { margin-top: 18px; }
+.tw-field, .tandem-field, .fuel-field { margin-top: 18px; }
 .tw-field .checkbox.tailwheel { font-size: 15px; font-weight: 800; }
 .tw-field .checkbox.tailwheel input { width: 20px; height: 20px; }
 

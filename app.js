@@ -100,7 +100,7 @@ const AIRCRAFT_PROFILES = {
       },
       "fuel": {
         "capacity_l": 73.0,
-        "density_kg_per_l": 0.7
+        "density_kg_per_l": 0.742
       },
       "index": {
         "moment_index_divisor": 1.0
@@ -186,6 +186,7 @@ function defaultState() {
     tailwheelArmEdited: false,
     acType: "Skyranger Nynja 600",
     reg: "",
+    fuelType: "mogas_e10_95",
     // Top fields
     fuelCap: "",
     mtow: "",
@@ -254,6 +255,7 @@ function collectState() {
     isTandem: el("isTandem").checked,
     tailwheelArmEdited: !!state.tailwheelArmEdited,
     reg: clampText(el("reg").value, 20),
+    fuelType: (el("fuelType") ? el("fuelType").value : "mogas_e10_95"),
     fuelCap: el("fuelCap").value,
     mtow: el("mtow").value,
     cgAft: el("cgAft").value,
@@ -341,6 +343,7 @@ function populateAircraftDropdown() {
 function applyState(st) {
   el("acType").value = st.acType || "Skyranger Nynja 600";
   el("reg").value = st.reg || "";
+  if (el("fuelType")) el("fuelType").value = st.fuelType || "mogas_e10_95";
 
 
   el("isTailwheel").checked = !!st.isTailwheel;
@@ -1309,6 +1312,27 @@ function updateTailwheelUI(userToggled=false) {
   }
 }
 
+function updateFuelTypeUI() {
+  const sel = el("fuelType") ? String(el("fuelType").value || "") : "mogas_e10_95";
+  let dens = null;
+  if (sel === "mogas_e10_95") dens = 0.742;
+  else if (sel === "avgas_100ll") dens = 0.710;
+  else if (sel === "mogas_e5_95") dens = 0.751;
+  else dens = null;
+
+  const densEl = el("fuelDens");
+  if (!densEl) return;
+
+  if (dens !== null) {
+    densEl.value = String(dens.toFixed(3));
+    densEl.readOnly = true;
+  } else {
+    densEl.readOnly = false;
+    if (!String(densEl.value || "").trim()) densEl.value = "0.742";
+  }
+}
+
+
 
 function updateTandemUI() {
   const cb = el("isTandem");
@@ -1328,7 +1352,8 @@ function updateTandemUI() {
 }
 
 function updateAll() {
-  try { updateTailwheelUI(); } catch (e) {}
+  try { updateTailwheelUI();
+  updateFuelTypeUI(); } catch (e) {}
   try { updateTandemUI(); } catch (e) {}
   try { updateTandemUI(); } catch (e) {}
   // Hide JS warning if JS runs
@@ -1367,6 +1392,7 @@ function setup() {
   // Load saved state
   const st = loadState();
   applyState(st);
+  updateFuelTypeUI();
   try { updateTailwheelUI(); } catch (e) {}
 
   // If Skyranger Nynja 600 is selected, always load the preset aircraft data
@@ -1425,7 +1451,7 @@ el("resetLimits").addEventListener("click", resetToPreset);
 
   // Input listeners -> updateAll
   const ids = [
-    "reg","fuelCap","mtow","cgAft","cgFwd",
+    "reg","fuelType","fuelCap","mtow","cgAft","cgFwd",
     "armNose","armMainL","armMainR","idxDiv","armPilot","armPax","armFuel","armBag",
     "fuelDens","seatMin","seatMax","seatTotalMin","bagMax",
     "noseLoad","leftLoad","rightLoad","emptyWt","emptyMoment",
