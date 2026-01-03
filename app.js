@@ -1,7 +1,7 @@
 /* ASCII-only JS */
 "use strict";
 
-const APP_TITLE = "W&B for Ultralight Version 2.02 by Egill Ibsen";
+const APP_TITLE = "W&B for Ultralight Version 2.3 by Egill Ibsen";
 const ADD_AIRCRAFT_OPTION = "Add Aircraft type...";
 const CUSTOM_TYPES_KEY = "wb_ultralight_custom_aircraft_types_v2_02";
 const DISCLAIMER_SHORT = "DISCLAIMER: Use at your own risk. Verify results against approved aircraft documentation.";
@@ -114,6 +114,57 @@ const AIRCRAFT_PROFILES = {
       ]
     }
   },
+  "Skyranger Nynja 450": {
+    "preset": false
+  },
+  "Skyranger Swift": {
+    "preset": false
+  },
+  "Zenith CH750 Cruzer": {
+    "preset": true,
+    "config": {
+      "aircraft_name": "Zenith CH750 Cruzer",
+      "units": {
+        "weight": "kg",
+        "arm": "m"
+      },
+      "mtow_kg": 600.0,
+      "datum_description": "Plumb line from wing leading edge (FoD positive, AoD negative)",
+      "cg_limits_m_forward_of_datum": {
+        "aft_limit": -0.483,
+        "forward_limit": -0.272
+      },
+      "arms_m": {
+        "nose_wheel": 0.0,
+        "left_main_wheel": 0.0,
+        "right_main_wheel": 0.0,
+        "pilot_seat": {
+          "aft_most": 0.0,
+          "fwd_most": 0.0
+        },
+        "passenger_seat": {
+          "aft_most": 0.0,
+          "fwd_most": 0.0
+        },
+        "fuel": 0.0,
+        "baggage": 0.0
+      },
+      "limits": {
+        "seat_min_kg": 0.0,
+        "seat_max_kg": 0.0,
+        "total_seat_min_kg": 0.0,
+        "baggage_max_kg": 0.0
+      },
+      "fuel": {
+        "capacity_l": 0.0,
+        "density_kg_per_l": 0.742
+      },
+      "index": {
+        "moment_index_divisor": 1.0
+      },
+      "fixed_items": []
+    }
+  },
   "ICP Savannah": {
     "preset": false
   },
@@ -121,6 +172,9 @@ const AIRCRAFT_PROFILES = {
     "preset": false
   },
   "Zenith 750": {
+    "preset": false
+  },
+  "Eurofox": {
     "preset": false
   }
 };
@@ -185,8 +239,7 @@ function defaultState() {
     isTandem: false,
     tailwheelArmEdited: false,
     acType: "Skyranger Nynja 600",
-    reg: "",
-    fuelType: "mogas_e10_95",
+fuelType: "mogas_e10_95",
     // Top fields
     fuelCap: "",
     mtow: "",
@@ -234,7 +287,9 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return d;
     const obj = JSON.parse(raw);
-    return Object.assign(d, obj || {});
+    
+    try { obj.reg = ""; } catch (e) {}
+return Object.assign(d, obj || {});
   } catch (e) {
     return d;
   }
@@ -254,7 +309,6 @@ function collectState() {
     isTailwheel: el("isTailwheel").checked,
     isTandem: el("isTandem").checked,
     tailwheelArmEdited: !!state.tailwheelArmEdited,
-    reg: clampText(el("reg").value, 20),
     fuelType: (el("fuelType") ? el("fuelType").value : "mogas_e10_95"),
     fuelCap: el("fuelCap").value,
     mtow: el("mtow").value,
@@ -309,7 +363,7 @@ function populateAircraftDropdown() {
   sel.innerHTML = "";
 
   // Keep a stable order for built-in types
-  const built = ["Skyranger Nynja 600", "ICP Savannah", "Zenith 701", "Zenith 750"];
+  const built = ["Skyranger Nynja 600", "Skyranger Nynja 450", "Skyranger Swift", "Zenith CH750 Cruzer", "ICP Savannah", "Zenith 701", "Zenith 750", "Eurofox"];
   for (const name of built) {
     if (!AIRCRAFT_PROFILES[name]) continue;
     const opt = document.createElement("option");
@@ -391,6 +445,7 @@ function applyState(st) {
 }
 
 function fillFromPreset(presetName) {
+  try { el("reg").value = ""; } catch (e) {}
   const prof = AIRCRAFT_PROFILES[presetName];
   const isPreset = !!(prof && prof.preset && prof.config);
   state.currentPresetName = presetName;

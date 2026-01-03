@@ -1,4 +1,4 @@
-W&B for Ultralight Version 2.02 by Egill Ibsen (Web) - Multi-aircraft
+W&B for Ultralight Version 2.3 by Egill Ibsen (Web) - Multi-aircraft
 
 This version adds:
 - A/C Type dropdown (Skyranger Nynja 600 preset + 3 other aircraft placeholders)
@@ -25,3 +25,6 @@ DISCLAIMER: Use at your own risk. Verify results against approved aircraft docum
 Update: Nynja CG fwd limit preset is 0.367 m FoD.
 
 If you still see old values, clear site data (Safari/Chrome) or tap Reset to preset.
+
+
+Preset added: Zenith CH750 Cruzer (CG limits from 18%..32% MAC, MAC 1510 mm; limits 270..480 mm aft of wing leading edge datum).
