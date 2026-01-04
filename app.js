@@ -135,9 +135,9 @@ const AIRCRAFT_PROFILES = {
         "forward_limit": -0.270
       },
       "arms_m": {
-        "nose_wheel": 0.760,
-        "left_main_wheel": -0.700,
-        "right_main_wheel": -0.700,
+        "nose_wheel": -0.760,
+        "left_main_wheel": 0.700,
+        "right_main_wheel": 0.700,
         "pilot_seat": {
           "aft_most": -0.650,
           "fwd_most": -0.650
@@ -146,8 +146,8 @@ const AIRCRAFT_PROFILES = {
           "aft_most": -0.650,
           "fwd_most": -0.650
         },
-        "fuel": -0.630,
-        "baggage": -1.600
+        "fuel": 0.630,
+        "baggage": 1.600
       },
       "limits": {
         "seat_min_kg": 0.0,
