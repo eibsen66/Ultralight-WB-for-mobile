@@ -1,5 +1,5 @@
 /* ASCII-only service worker */
-const CACHE_NAME = "wb-ultralight-v2-04-001";
+const CACHE_NAME = "wb-ultralight-v2-05-001";
 const PRECACHE = [
   "./",
   "./index.html",
@@ -46,4 +46,13 @@ self.addEventListener("fetch", (event) => {
       return caches.match("./index.html");
     }
   })());
+});
+
+
+self.addEventListener("message", function(event) {
+  try {
+    if (event && event.data && event.data.type === "SKIP_WAITING") {
+      self.skipWaiting();
+    }
+  } catch (e) {}
 });

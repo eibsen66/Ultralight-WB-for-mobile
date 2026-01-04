@@ -1,7 +1,57 @@
+function setupServiceWorkerUpdate() {
+  if (!("serviceWorker" in navigator)) return;
+
+  function showUpdate(msg, btnText, onClick) {
+    var b = document.getElementById("updateBanner");
+    if (!b) return;
+    b.style.display = "block";
+    b.textContent = msg;
+    if (btnText && onClick) {
+      var sp = document.createElement("span");
+      sp.textContent = " ";
+      var bt = document.createElement("button");
+      bt.className = "btn secondary";
+      bt.style.marginLeft = "10px";
+      bt.textContent = btnText;
+      bt.addEventListener("click", onClick);
+      b.appendChild(sp);
+      b.appendChild(bt);
+    }
+  }
+
+  navigator.serviceWorker.getRegistration().then(function(reg) {
+    if (!reg) return;
+
+    if (reg.waiting) {
+      showUpdate("Update available. Tap to refresh.", "Update", function() {
+        try { reg.waiting.postMessage({ type: "SKIP_WAITING" }); } catch (e) {}
+      });
+    }
+
+    reg.addEventListener("updatefound", function() {
+      var nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener("statechange", function() {
+        if (nw.state === "installed") {
+          if (navigator.serviceWorker.controller) {
+            showUpdate("Update installed. Tap to reload.", "Reload", function() {
+              window.location.reload();
+            });
+          }
+        }
+      });
+    });
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", function() {
+    window.location.reload();
+  });
+}
+
 /* ASCII-only JS */
 "use strict";
 
-const APP_TITLE = "W&B for Ultralight Version 2.04 by Egill Ibsen";
+const APP_TITLE = "W&B for Ultralight Version 2.05 by Egill Ibsen";
 const ADD_AIRCRAFT_OPTION = "Add Aircraft type...";
 const CUSTOM_TYPES_KEY = "wb_ultralight_custom_aircraft_types_v2_02";
 const DISCLAIMER_SHORT = "DISCLAIMER: Use at your own risk. Verify results against approved aircraft documentation.";
@@ -1248,8 +1298,8 @@ function doPrint() {
 
   // Render chart to an offscreen canvas
   const off = document.createElement("canvas");
-  off.width = 900;
-  off.height = 650;
+  off.width = 760;
+  off.height = 440;
   drawChartToCanvas(off, bundle);
   const imgData = off.toDataURL("image/png");
 
@@ -1259,14 +1309,16 @@ function doPrint() {
     return;
   }
 
-  const css = `
-    body { font-family: Arial, sans-serif; margin: 14mm; color: #000; }
-    .reg { text-align: center; font-weight: 800; font-size: 18px; margin-bottom: 4mm; }
-    .title { font-weight: 800; font-size: 14px; margin-bottom: 2mm; }
-    .meta { font-size: 11px; margin-bottom: 4mm; }
-    pre { white-space: pre-wrap; border: 1px solid #999; padding: 8px; font-size: 10px; }
-    img { width: 100%; border: 1px solid #999; margin-top: 6mm; }
-  `;
+  const css = `@page { size: A4; margin: 10mm; }
+body { font-family: Arial, sans-serif; margin: 0; color: #000; }
+.page { padding: 10mm; }
+.reg { text-align: center; font-weight: 800; font-size: 16px; margin: 0 0 3mm 0; }
+.title { font-weight: 800; font-size: 13px; margin: 0 0 1.5mm 0; }
+.meta { font-size: 10px; margin: 0 0 3mm 0; }
+pre { white-space: pre-wrap; border: 1px solid #777; padding: 6px; font-size: 9px; line-height: 1.15; margin: 0; }
+.chartwrap { margin-top: 4mm; border: 1px solid #777; padding: 3px; }
+img { width: 100%; height: 105mm; object-fit: contain; display: block; }
+.avoidbreak { page-break-inside: avoid; break-inside: avoid; }`;
 
   const html = `
     <!doctype html>
@@ -1277,18 +1329,18 @@ function doPrint() {
       <title>${title}</title>
       <style>${css}</style>
     </head>
-    <body>
+    <body><div class="page">
       <div class="reg">${reg ? reg : ""}</div>
       <div class="title">Loadsheet</div>
       <div class="meta">${bundle.cfg.aircraft_name} | ${nowStamp()}</div>
-      <pre>${escapeHtml(text)}</pre>
-      <img src="${imgData}" alt="W&B chart">
+      <pre class="avoidbreak">${escapeHtml(text)}</pre>
+      <div class="chartwrap avoidbreak"><img src="${imgData}" alt="W&B chart"></div>
       <script>
         window.onload = function() {
           setTimeout(function(){ window.print(); }, 150);
         };
       </script>
-    </body>
+    </div></body>
     </html>
   `;
   w.document.open();
@@ -1441,6 +1493,7 @@ function updateAll() {
 }
 
 function setup() {
+  setupServiceWorkerUpdate();
   // Populate dropdown
   populateAircraftDropdown();
 
