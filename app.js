@@ -51,7 +51,7 @@ function setupServiceWorkerUpdate() {
 /* ASCII-only JS */
 "use strict";
 
-const APP_TITLE = "W&B for Ultralight Version 2.05 by Egill Ibsen";
+const APP_TITLE = "W&B for Ultralight Version 2.08 by Egill Ibsen";
 const ADD_AIRCRAFT_OPTION = "Add Aircraft type...";
 const CUSTOM_TYPES_KEY = "wb_ultralight_custom_aircraft_types_v2_02";
 const DISCLAIMER_SHORT = "DISCLAIMER: Use at your own risk. Verify results against approved aircraft documentation.";
@@ -116,59 +116,143 @@ const AIRCRAFT_PROFILES = {
   "Skyranger Nynja 600": {
     "preset": true,
     "config": {
-      "aircraft_name": "SkyRanger Nynja LS 600",
+      "aircraft_name": "SkyRanger Nynja / Swift (600 kg)",
       "units": {
-        "weight": "kg",
-        "arm": "m"
+            "weight": "kg",
+            "arm": "m"
       },
       "mtow_kg": 600.0,
-      "datum_description": "Main wheel axle center (FoD positive, AoD negative)",
+      "datum_description": "Skyranger datum per HADS Annex C (FoD positive, AoD negative)",
       "cg_limits_m_forward_of_datum": {
-        "aft_limit": 0.21,
-        "forward_limit": 0.367
+            "aft_limit": 0.197,
+            "forward_limit": 0.367
       },
       "arms_m": {
-        "nose_wheel": 1.45,
-        "left_main_wheel": 0.0,
-        "right_main_wheel": 0.0,
-        "pilot_seat": {
-          "aft_most": 0.15,
-          "fwd_most": 0.15
-        },
-        "passenger_seat": {
-          "aft_most": 0.15,
-          "fwd_most": 0.15
-        },
-        "fuel": -0.29,
-        "baggage": -0.29
+            "nose_wheel": 1.4,
+            "left_main_wheel": 0.0,
+            "right_main_wheel": 0.0,
+            "pilot_seat": {
+                  "aft_most": 0.15,
+                  "fwd_most": 0.15
+            },
+            "passenger_seat": {
+                  "aft_most": 0.15,
+                  "fwd_most": 0.15
+            },
+            "fuel": -0.35,
+            "baggage": -0.35
       },
       "limits": {
-        "seat_min_kg": 55.0,
-        "seat_max_kg": 120.0,
-        "total_seat_min_kg": 172.0,
-        "baggage_max_kg": 10.0
+            "seat_min_kg": 55.0,
+            "seat_max_kg": 120.0,
+            "total_seat_min_kg": 0.0,
+            "baggage_max_kg": 10.0
       },
       "fuel": {
-        "capacity_l": 73.0,
-        "density_kg_per_l": 0.742
+            "capacity_l": 73.0,
+            "density_kg_per_l": 0.742
       },
       "index": {
-        "moment_index_divisor": 1.0
+            "moment_index_divisor": 1.0
       },
       "fixed_items": [
-        {
-          "name": "Aluminium fuel tank (empty) 7.5 kg (include only if not already in baseline)",
-          "weight_kg": 7.5,
-          "arm_m": -0.29
-        }
+            {
+                  "name": "Aluminium fuel tank (empty) 7.5 kg (include only if not already in baseline)",
+                  "weight_kg": 7.5,
+                  "arm_m": -0.29
+            }
       ]
-    }
+}
   },
   "Skyranger Nynja 450": {
-    "preset": false
+    "preset": true,
+    "config": {
+      "aircraft_name": "SkyRanger Nynja / Swift (450 kg default)",
+      "units": {
+            "weight": "kg",
+            "arm": "m"
+      },
+      "mtow_kg": 450.0,
+      "datum_description": "Skyranger datum per HADS Annex C (FoD positive, AoD negative)",
+      "cg_limits_m_forward_of_datum": {
+            "aft_limit": 0.21,
+            "forward_limit": 0.38
+      },
+      "arms_m": {
+            "nose_wheel": 1.45,
+            "left_main_wheel": 0.0,
+            "right_main_wheel": 0.0,
+            "pilot_seat": {
+                  "aft_most": 0.15,
+                  "fwd_most": 0.15
+            },
+            "passenger_seat": {
+                  "aft_most": 0.15,
+                  "fwd_most": 0.15
+            },
+            "fuel": -0.29,
+            "baggage": -0.29
+      },
+      "limits": {
+            "seat_min_kg": 55.0,
+            "seat_max_kg": 120.0,
+            "total_seat_min_kg": 0.0,
+            "baggage_max_kg": 10.0
+      },
+      "fuel": {
+            "capacity_l": 73.0,
+            "density_kg_per_l": 0.742
+      },
+      "index": {
+            "moment_index_divisor": 1.0
+      },
+      "fixed_items": []
+}
   },
   "Skyranger Swift": {
-    "preset": false
+    "preset": true,
+    "config": {
+      "aircraft_name": "SkyRanger Swift (450 kg default)",
+      "units": {
+            "weight": "kg",
+            "arm": "m"
+      },
+      "mtow_kg": 450.0,
+      "datum_description": "Skyranger datum per HADS Annex C (FoD positive, AoD negative)",
+      "cg_limits_m_forward_of_datum": {
+            "aft_limit": 0.21,
+            "forward_limit": 0.38
+      },
+      "arms_m": {
+            "nose_wheel": 1.45,
+            "left_main_wheel": 0.0,
+            "right_main_wheel": 0.0,
+            "pilot_seat": {
+                  "aft_most": 0.15,
+                  "fwd_most": 0.15
+            },
+            "passenger_seat": {
+                  "aft_most": 0.15,
+                  "fwd_most": 0.15
+            },
+            "fuel": -0.29,
+            "baggage": -0.29
+      },
+      "limits": {
+            "seat_min_kg": 55.0,
+            "seat_max_kg": 120.0,
+            "total_seat_min_kg": 0.0,
+            "baggage_max_kg": 10.0
+      },
+      "fuel": {
+            "capacity_l": 73.0,
+            "density_kg_per_l": 0.742
+      },
+      "index": {
+            "moment_index_divisor": 1.0
+      },
+      "fixed_items": []
+}
   },
   "Zenith CH750 Cruzer": {
     "preset": true,
@@ -214,6 +298,51 @@ const AIRCRAFT_PROFILES = {
       },
       "fixed_items": []
     }
+  },
+  "Skyranger Classic": {
+    "preset": true,
+    "config": {
+      "aircraft_name": "SkyRanger Classic (450 kg default)",
+      "units": {
+            "weight": "kg",
+            "arm": "m"
+      },
+      "mtow_kg": 450.0,
+      "datum_description": "Skyranger datum per HADS Annex C (FoD positive, AoD negative)",
+      "cg_limits_m_forward_of_datum": {
+            "aft_limit": 0.21,
+            "forward_limit": 0.36
+      },
+      "arms_m": {
+            "nose_wheel": 1.45,
+            "left_main_wheel": -0.04,
+            "right_main_wheel": -0.04,
+            "pilot_seat": {
+                  "aft_most": 0.15,
+                  "fwd_most": 0.15
+            },
+            "passenger_seat": {
+                  "aft_most": 0.15,
+                  "fwd_most": 0.15
+            },
+            "fuel": -0.29,
+            "baggage": -0.29
+      },
+      "limits": {
+            "seat_min_kg": 55.0,
+            "seat_max_kg": 120.0,
+            "total_seat_min_kg": 0.0,
+            "baggage_max_kg": 10.0
+      },
+      "fuel": {
+            "capacity_l": 73.0,
+            "density_kg_per_l": 0.742
+      },
+      "index": {
+            "moment_index_divisor": 1.0
+      },
+      "fixed_items": []
+}
   },
   "ICP Savannah": {
     "preset": false
@@ -413,7 +542,7 @@ function populateAircraftDropdown() {
   sel.innerHTML = "";
 
   // Keep a stable order for built-in types
-  const built = ["Skyranger Nynja 600", "Skyranger Nynja 450", "Skyranger Swift", "Zenith CH750 Cruzer", "ICP Savannah", "Zenith 701", "Zenith 750", "Eurofox"];
+  const built = ["Skyranger Nynja 600", "Skyranger Nynja 450", "Skyranger Swift", "Skyranger Classic", "Zenith CH750 Cruzer", "ICP Savannah", "Zenith 701", "Zenith 750", "Eurofox"];
   for (const name of built) {
     if (!AIRCRAFT_PROFILES[name]) continue;
     const opt = document.createElement("option");
@@ -1357,10 +1486,27 @@ function buildHelpText() {
   lines.push("  The author accepts no liability for errors or misuse.");
   lines.push("");
   lines.push("A/C Type:");
-  lines.push("  - Skyranger Nynja 600: preset values are loaded automatically.");
-  lines.push("  - Other aircraft: aircraft data fields are cleared. Enter all required aircraft data.");
-  lines.push("");
-  lines.push("How to use:");
+lines.push("  Preset aircraft (values load automatically):");
+lines.push("    - Skyranger Nynja 600");
+lines.push("    - Skyranger Nynja 450");
+lines.push("    - Skyranger Swift");
+lines.push("    - Skyranger Classic");
+lines.push("    - Zenith CH750 Cruzer");
+lines.push("  Other aircraft: aircraft data fields are cleared. Enter all required aircraft data.");
+lines.push("");
+lines.push("Skyranger combined seat load note (HADS):");
+lines.push("  The minimum allowed total seat load depends on MTOW:");
+lines.push("    - 172 kg at 450/472.5 kg");
+lines.push("    - 190 kg at 500 kg");
+lines.push("    - 200 kg at 600 kg");
+lines.push("  If you cannot stay within CG limits, you may need to limit total seat load (placard).");
+lines.push("");
+lines.push("Skyranger Swift note:");
+lines.push("  Some Swift versions have main wheel arm = -0.04 m (external drag brace).");
+lines.push("  Others have main wheel arm = 0.00 m (internal drag brace).");
+lines.push("  If needed, edit main wheel arm(s) in Aircraft data.");
+lines.push("");
+lines.push("How to use:");
   lines.push("  1) Select A/C Type and make sure aircraft data is filled.");
   lines.push("  2) Enter wheel loads and compute EMPTY, or enter empty weight + empty moment.");
   lines.push("  3) Enter pilot/pax/fuel/baggage and compute LOADED.");
@@ -1372,6 +1518,19 @@ function buildHelpText() {
   lines.push("");
   lines.push("Offline:");
   lines.push("  - Offline install (Add to Home Screen) works best when hosted on HTTPS.");
+lines.push("");
+lines.push("Skyranger seat weight note (simple explanation):");
+lines.push("  Pilot + Passenger = combined seat load.");
+lines.push("  Each seat max is 120 kg (total can be up to 240 kg).");
+lines.push("  If CG is hard to keep within limits, the owner/operator may placard a LOWER MAX for pilot+passenger.");
+lines.push("  HADS says this reduced MAX must not be below:");
+lines.push("    172 kg at 450/472.5 kg AUW");
+lines.push("    190 kg at 500 kg AUW");
+lines.push("    200 kg at 600 kg AUW");
+lines.push("  This is not a minimum people weight. It is the lowest allowed reduced MAX if a placard is used.");
+
+lines.push("Reminder:");
+lines.push("  You are responsible to verify all aircraft data, limits and results against approved documents.");
   return lines.join("\n");
 }
 

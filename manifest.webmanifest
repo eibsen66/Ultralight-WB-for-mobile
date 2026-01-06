@@ -2,7 +2,7 @@
   "name": "W&B for Ultralight",
   "short_name": "W&B",
   "description": "Weight and Balance calculator (offline capable)",
-  "start_url": "./?v=205",
+  "start_url": "./?v=208",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0b1020",
